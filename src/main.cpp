@@ -3,6 +3,7 @@
 #include <vector>
 #include <cstring>
 #include <random>
+#include <numeric>
 
 const size_t width = 29;
 const size_t height = 19;
@@ -163,7 +164,7 @@ typedef std::array<bool, width * height> Chromo;
 struct PopElement
 {
     Chromo val;
-    float fitness;
+    size_t fitness;
 };
 
 typedef std::vector<PopElement> Population;
@@ -186,7 +187,7 @@ void initPopulation(Population& pop)
             if(rnd > 0.5f) pop[q].val[w] = true;
             else pop[q].val[w] = false;
 
-            pop[q].fitness = 0.0f;
+            pop[q].fitness = 1;
         }
     }
 }
@@ -243,7 +244,7 @@ size_t assignFitness(Population& pop, Chromo& best)
         }
 
         pop[q].fitness = reward;
-        if(reward == 0) pop[q].fitness = 0.1f;
+        if(reward == 0) pop[q].fitness = 1;
     }
 
     return bestReward;
@@ -288,7 +289,7 @@ PopElement roulette(const Population& pop, float totalFitness)
 
     float slice = dist(rd) * totalFitness;
 
-    float fitnesThreshold = 0.0f;
+    size_t fitnesThreshold = 0;
     for(size_t q = 0; q < populationSize; ++q)
     {
         fitnesThreshold += pop[q].fitness;
@@ -308,7 +309,7 @@ int main()
     initPopulation(pop);
 
     size_t epoch = 1;
-    const size_t maxEpoch = 100000;
+    const size_t maxEpoch = 5000;
 
     Chromo bestTotal;
     size_t totalBestReward = 0;
@@ -323,15 +324,19 @@ int main()
         {
             bestTotal = best;
             totalBestReward = bestReward;
+
+            {
+                Maze maze;
+                initMaze(maze);
+                mazeFromChromo(bestTotal, maze);
+                printMaze(maze);
+            }
         }
 
         printf("total best reward: %zd best reward: %zd\n", totalBestReward, bestReward);
 
-        float totalFitness = 0.0f;
-        for(size_t q = 0; q < populationSize; ++q)
-        {
-            totalFitness += pop[q].fitness;
-        }
+        size_t totalFitness = 0;
+        totalFitness = std::accumulate(pop.begin(), pop.end(), static_cast<size_t>(0), [](size_t init, const PopElement& elem){ return init + elem.fitness; });
         
         for(size_t q = 0; q < populationSize; q += 2)
         {
@@ -349,12 +354,6 @@ int main()
 
     //size_t reward = runGame(pop[0].val);
     //printf("reward = %zd\n", reward);
-    {
-        Maze maze;
-        initMaze(maze);
-        mazeFromChromo(bestTotal, maze);
-        printMaze(maze);
-    }
 
     return 0;
 }
