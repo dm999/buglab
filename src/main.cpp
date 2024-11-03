@@ -424,6 +424,12 @@ PopElement roulette(const Population& pop, float totalFitness)
 int main()
 {
 
+    if(sizeof(size_t) < 8)
+    {
+        printf("Use 64bit compiler");
+        return 0;
+    }
+
     Population pop;
     initPopulation(pop);
 
