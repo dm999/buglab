@@ -437,11 +437,11 @@ std::pair<PopElement, PopElement> crossover(const PopElement& elemA, const PopEl
     return ret;
 }
 
-PopElement roulette(const Population& pop, float totalFitness)
+PopElement roulette(const Population& pop, size_t totalFitness)
 {
     std::uniform_real_distribution dist(0.0f, 1.0f);
 
-    float slice = dist(gen) * totalFitness;
+    size_t slice = dist(gen) * totalFitness;
 
     size_t fitnesThreshold = 0;
     for(size_t q = 0; q < populationSize; ++q)
