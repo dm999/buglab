@@ -56,6 +56,10 @@ void printMaze(const Maze& maze)
 
 bool isExitExists(const Maze& maze)
 {
+
+    if(maze[1 * maxWidth + 1] == wall) return false;
+    if(maze[height * maxWidth + width] == wall) return false;
+
     Maze visited(maze);
 
     bool ok;
@@ -200,6 +204,17 @@ void mazeFromChromo(const Chromo& chromo, Maze& maze)
         for(size_t w = 0; w < width; ++w)
         {
             maze[(q + 1) * maxWidth + w + 1] = chromo[q * width + w] * wall;
+        }
+    }
+}
+
+void chromoFromMaze(const Maze& maze, Chromo& chromo)
+{
+    for(size_t q = 0; q < height; ++q)
+    {
+        for(size_t w = 0; w < width; ++w)
+        {
+            chromo[q * width + w] = maze[(q + 1) * maxWidth + w + 1] & wall;
         }
     }
 }
@@ -421,6 +436,36 @@ PopElement roulette(const Population& pop, float totalFitness)
     return pop[populationSize - 1];
 }
 
+void loadState(Population& pop)
+{
+
+    FILE * f = fopen("map.txt", "rt");
+    if(f)
+    {
+        Maze maze;
+        initMaze(maze);
+
+        for(size_t q = 0; q < maxHeight; ++q)
+        {
+            for(size_t w = 0; w < maxWidth; ++w)
+            {
+                char val;
+                fscanf(f, "%c", &val);
+                if(val == '#') maze[q * maxWidth + w] = wall;
+            }
+
+            fseek(f, 2, SEEK_CUR);
+        }
+
+        for(size_t q = 0; q < populationSize; ++q)
+        {
+            chromoFromMaze(maze, pop[q].val);
+        }
+
+        fclose(f);
+    }
+}
+
 int main()
 {
 
@@ -432,16 +477,17 @@ int main()
 
     Population pop;
     initPopulation(pop);
+    loadState(pop);
 
     size_t epoch = 1;
-    const size_t maxEpoch = 5000;
+    const size_t maxEpoch = 100000;
 
     Chromo bestTotal;
     size_t totalBestReward = 0;
 
     while(epoch < maxEpoch)
     {
-        printf("Epoch: %zd\n", epoch);
+        printf("Epoch: %5zd ", epoch);
 
         Chromo best;
         size_t bestReward = assignFitness(pop, best);
