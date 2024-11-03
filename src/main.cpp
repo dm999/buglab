@@ -5,6 +5,8 @@
 #include <random>
 #include <numeric>
 #include <queue>
+#include <string>
+#include <fstream>
 
 //genetics
 const size_t populationSize = 10000;
@@ -51,7 +53,7 @@ void initMaze(Maze& maze)
     }
 }
 
-void printMaze(const Maze& maze)
+void saveMaze(const Maze& maze)
 {
     FILE * f = fopen("map.txt", "wt");
     if(f)
@@ -68,6 +70,19 @@ void printMaze(const Maze& maze)
         }
 
         fclose(f);
+    }
+}
+
+void printMaze(const Maze& maze)
+{
+    for(size_t q = 0; q < maxHeight; ++q)
+    {
+        for(size_t w = 0; w < maxWidth; ++w)
+        {
+            if(maze[q * maxWidth + w] == wall) printf("#");
+            else printf(".");
+        }
+        printf("\n");
     }
 }
 
@@ -439,22 +454,22 @@ PopElement roulette(const Population& pop, float totalFitness)
 
 void loadState(Population& pop)
 {
+    std::string inputLine;
+
     FILE * f = fopen("map.txt", "rt");
-    if(f)
+    std::ifstream file("map.txt");
+    if(file.is_open())
     {
         Maze maze;
         initMaze(maze);
 
         for(size_t q = 0; q < maxHeight; ++q)
         {
+            getline(file, inputLine);
             for(size_t w = 0; w < maxWidth; ++w)
             {
-                char val;
-                fscanf(f, "%c", &val);
-                if(val == '#') maze[q * maxWidth + w] = wall;
+                if(inputLine[w] == '#') maze[q * maxWidth + w] = wall;
             }
-
-            fseek(f, 2, SEEK_CUR);
         }
 
         for(size_t q = 0; q < populationSize; ++q)
@@ -462,7 +477,7 @@ void loadState(Population& pop)
             chromoFromMaze(maze, pop[q].val);
         }
 
-        fclose(f);
+        printMaze(maze);
     }
 }
 
@@ -500,7 +515,7 @@ void geneticSearch(Population& pop)
                 Maze maze;
                 initMaze(maze);
                 mazeFromChromo(bestTotal, maze);
-                printMaze(maze);
+                saveMaze(maze);
             }
         }
 
