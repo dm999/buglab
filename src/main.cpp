@@ -13,6 +13,10 @@ const size_t populationSize = 10000;
 const float crossoverRate = 0.7f;
 const float mutationRate = 0.001f;
 
+//diff evolution
+const float CR = 0.5f;
+const float F = 0.5f;
+
 //parallel
 #define PROCESS_THREADS
 #define PROCESS_THREADS_GEN
@@ -197,6 +201,7 @@ bool runMaze(Maze& maze, size_t& reward)
 }
 
 std::random_device rd;
+std::mt19937 gen(rd());
 typedef std::array<bool, width * height> Chromo;
 struct PopElement
 {
@@ -216,7 +221,7 @@ void initPopulation(Population& pop)
     {
         for(size_t w = 0; w < width * height; ++w)
         {
-            float rnd = dist(rd);
+            float rnd = dist(gen);
             if(rnd > 0.5f) pop[q].val[w] = true;
             else pop[q].val[w] = false;
 
@@ -406,7 +411,7 @@ void mutate(PopElement& elem)
 
     for(size_t w = 0; w < elem.val.size(); ++w)
     {
-        if(dist(rd) < mutationRate)
+        if(dist(gen) < mutationRate)
         {
             elem.val[w] = !elem.val[w];
         }
@@ -419,9 +424,9 @@ std::pair<PopElement, PopElement> crossover(const PopElement& elemA, const PopEl
 
     std::uniform_real_distribution dist(0.0f, 1.0f);
 
-    if(dist(rd) < crossoverRate)
+    if(dist(gen) < crossoverRate)
     {
-        size_t crossover = static_cast<size_t>(dist(rd) * width * height);
+        size_t crossover = static_cast<size_t>(dist(gen) * width * height);
 
         std::copy(elemA.val.begin(), elemA.val.begin() + crossover, ret.first.val.begin());
         std::copy(elemB.val.begin() + crossover, elemB.val.end(), ret.first.val.begin() + crossover);
@@ -437,7 +442,7 @@ PopElement roulette(const Population& pop, float totalFitness)
 {
     std::uniform_real_distribution dist(0.0f, 1.0f);
 
-    float slice = dist(rd) * totalFitness;
+    float slice = dist(gen) * totalFitness;
 
     size_t fitnesThreshold = 0;
     for(size_t q = 0; q < populationSize; ++q)
@@ -574,6 +579,103 @@ void geneticSearch(Population& pop)
 
 }
 
+//https://en.wikipedia.org/wiki/Differential_evolution
+void diffEvolutionSearch(Population& pop)
+{
+    size_t epoch = 1;
+
+    size_t totalBestReward = 0;
+
+    {
+        Chromo best;
+        size_t bestIndex;
+        size_t bestReward = assignFitness(pop, best, bestIndex);
+        if(bestReward > totalBestReward)
+        {
+            totalBestReward = bestReward;
+        }
+    }
+
+    while(epoch < maxEpoch)
+    {
+        printf("Epoch: %5zd ", epoch);
+
+        std::uniform_int_distribution<> dist(0, populationSize - 1);
+        std::uniform_real_distribution rDist(0.0f, 1.0f);
+
+        size_t bestReward = 0;
+
+        for(size_t q = 0; q < populationSize; ++q)
+        {
+            size_t indexA = dist(gen), indexB = dist(gen), indexC = dist(gen);
+
+            while(indexA == q) indexA = dist(gen);
+            while(indexB == q || indexB == indexA) indexB = dist(gen);
+            while(indexC == q || indexC == indexA || indexC == indexB) indexC = dist(gen);
+
+            size_t R = static_cast<size_t>(rDist(gen) * width * height) - 1;
+
+            Chromo newElem;
+            newElem = pop[q].val;
+
+            //https://arxiv.org/pdf/1812.03513
+            for(size_t w = 0; w < newElem.size(); ++w)
+            {
+                float r = rDist(gen);
+                float f = rDist(gen);
+
+                if(pop[indexB].val[w] != pop[indexC].val[w] && f < F)
+                {
+                    newElem[w] = !pop[indexA].val[w];
+                }
+                else
+                {
+                    newElem[w] = pop[indexA].val[w];
+                }
+
+                if(r > CR || w == R)
+                {
+                    newElem[w] = pop[q].val[w];
+                }
+
+                //if(r < CR || w == R)
+                //{
+                    //newElem[w] = static_cast<bool>((static_cast<float>(pop[indexA].val[w]) + F * (static_cast<float>(pop[indexB].val[w]) - static_cast<float>(pop[indexC].val[w]))) + 0.5f);
+                //}
+            }
+
+            size_t reward = runGame(newElem);
+
+            if(reward > bestReward)
+            {
+                bestReward = reward;
+            }
+
+            if(reward >= pop[q].fitness)
+            {
+                pop[q].fitness = reward;
+                pop[q].val = newElem;
+
+                if(reward > totalBestReward)
+                {
+                    totalBestReward = reward;
+
+                    {
+                        Maze maze;
+                        initMaze(maze);
+                        mazeFromChromo(pop[q].val, maze);
+                        saveMaze(maze);
+                    }
+                }
+            }
+        }
+
+        printf("total best reward: %zd best reward: %zd\n", totalBestReward, bestReward);
+
+        ++epoch;
+    }
+}
+
 int main()
 {
 
@@ -588,6 +690,7 @@ int main()
     loadState(pop);
 
     geneticSearch(pop);
+    //diffEvolutionSearch(pop);
 
     return 0;
 }
