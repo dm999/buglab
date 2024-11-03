@@ -10,6 +10,8 @@
 
 //genetics
 const size_t populationSize = 10000;
+const size_t elite = 100;
+const size_t populationSizeAndElite = populationSize + elite;
 const float crossoverRate = 0.7f;
 const float mutationRate = 0.001f;
 
@@ -24,7 +26,7 @@ const size_t threadsAmount = 10;
 const size_t threadsAmountGen = 10;
 
 //other
-size_t refreshEvery = 5;
+size_t refreshEvery = 50000;
 
 
 //main
@@ -212,11 +214,11 @@ typedef std::vector<PopElement> Population;
 
 void initPopulation(Population& pop)
 {
-    pop.resize(populationSize);
+    pop.resize(populationSizeAndElite);
 
     std::uniform_real_distribution dist(0.0f, 1.0f);
 
-    for(size_t q = 0; q < populationSize; ++q)
+    for(size_t q = 0; q < populationSizeAndElite; ++q)
     {
         for(size_t w = 0; w < width * height; ++w)
         {
@@ -444,7 +446,7 @@ PopElement roulette(const Population& pop, size_t totalFitness)
     size_t slice = dist(gen) * totalFitness;
 
     size_t fitnesThreshold = 0;
-    for(size_t q = 0; q < populationSize; ++q)
+    for(size_t q = 0; q < populationSizeAndElite; ++q)
     {
         fitnesThreshold += pop[q].fitness;
         if(fitnesThreshold >= slice)
@@ -453,7 +455,7 @@ PopElement roulette(const Population& pop, size_t totalFitness)
         }
     }
 
-    return pop[populationSize - 1];
+    return pop[populationSizeAndElite - 1];
 }
 
 void loadState(Population& pop)
@@ -476,7 +478,7 @@ void loadState(Population& pop)
             }
         }
 
-        for(size_t q = 0; q < populationSize; ++q)
+        for(size_t q = 0; q < populationSizeAndElite; ++q)
         {
             chromoFromMaze(maze, pop[q].val);
         }
@@ -501,7 +503,7 @@ void geneticSearch(Population& pop)
 
         if(epoch % refreshEvery == 0)//refresh
         {
-            for(size_t q = 0; q < populationSize; ++q)
+            for(size_t q = 0; q < populationSizeAndElite; ++q)
             {
                 pop[q].val = bestTotal;
             }
@@ -525,6 +527,13 @@ void geneticSearch(Population& pop)
             }
         }
 
+        //elitism
+        for(size_t q = populationSize; q < populationSizeAndElite; ++q)
+        {
+            pop[q].val = bestTotal;
+            pop[q].fitness = totalBestReward;
+        }
+
         printf("total best reward: %zd best reward: %zd ", totalBestReward, bestReward);
 
         size_t totalFitness = 0;
@@ -542,7 +551,7 @@ void geneticSearch(Population& pop)
                     std::pair<PopElement, PopElement> cross = crossover(elemA, elemB);
                     mutate(cross.first);
                     mutate(cross.second);
-                    if(!resultUpdated || bestIndex != q || bestIndex != q + 1)
+                    //if(!resultUpdated || bestIndex != q || bestIndex != q + 1)
                     {
                         pop[q + 0] = cross.first;
                         pop[q + 1] = cross.second;
@@ -550,7 +559,7 @@ void geneticSearch(Population& pop)
                 }
             };
 
-            size_t batch = populationSize / threadsAmountGen;
+            size_t batch = populationSizeAndElite / threadsAmountGen;
 
             for(size_t q = 0; q < threadsAmountGen; ++q)
             {
@@ -560,14 +569,14 @@ void geneticSearch(Population& pop)
             }
         }
 #else
-        for(size_t q = 0; q < populationSize; q += 2)
+        for(size_t q = 0; q < populationSizeAndElite; q += 2)
         {
             PopElement elemA = roulette(pop, totalFitness);
             PopElement elemB = roulette(pop, totalFitness);
             std::pair<PopElement, PopElement> cross = crossover(elemA, elemB);
             mutate(cross.first);
             mutate(cross.second);
-            if(!resultUpdated || bestIndex != q || bestIndex != q + 1)
+            //if(!resultUpdated || bestIndex != q || bestIndex != q + 1)
             {
                 pop[q + 0] = cross.first;
                 pop[q + 1] = cross.second;
