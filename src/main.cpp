@@ -17,6 +17,10 @@ const float mutationRate = 0.001f;
 const size_t threadsAmount = 10;
 const size_t threadsAmountGen = 10;
 
+//other
+const size_t maxEpoch = 100000;
+size_t refreshEvery = 5;
+
 
 //main
 const size_t width = 29;
@@ -235,17 +239,6 @@ size_t runGame(const Chromo& chromo)
 
     mazeFromChromo(chromo, maze);
 
-    //maze[1 * maxWidth + 2] = wall;
-    //maze[2 * maxWidth + 2] = wall;
-    //maze[2 * maxWidth + 1] = wall;
-
-    //maze[18 * maxWidth + 28] = wall;
-    //maze[18 * maxWidth + 29] = wall;
-    //maze[19 * maxWidth + 28] = wall;
-
-    //printMaze(maze);
-
-
     size_t reward;
     bool isExit = runMaze(maze, reward);
 
@@ -446,7 +439,6 @@ PopElement roulette(const Population& pop, float totalFitness)
 
 void loadState(Population& pop)
 {
-
     FILE * f = fopen("map.txt", "rt");
     if(f)
     {
@@ -488,7 +480,6 @@ int main()
     loadState(pop);
 
     size_t epoch = 1;
-    const size_t maxEpoch = 100000;
 
     Chromo bestTotal;
     size_t totalBestReward = 0;
@@ -498,6 +489,14 @@ int main()
     while(epoch < maxEpoch)
     {
         printf("Epoch: %5zd ", epoch);
+
+        if(epoch % refreshEvery == 0)//refresh
+        {
+            for(size_t q = 0; q < populationSize; ++q)
+            {
+                pop[q].val = bestTotal;
+            }
+        }
 
         Chromo best;
         size_t bestReward = assignFitness(pop, best, bestIndex);
