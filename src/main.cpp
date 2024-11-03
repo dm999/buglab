@@ -466,18 +466,8 @@ void loadState(Population& pop)
     }
 }
 
-int main()
+void geneticSearch(Population& pop)
 {
-
-    if(sizeof(size_t) < 8)
-    {
-        printf("Use 64bit compiler");
-        return 0;
-    }
-
-    Population pop;
-    initPopulation(pop);
-    loadState(pop);
 
     size_t epoch = 1;
 
@@ -518,7 +508,7 @@ int main()
 
         size_t totalFitness = 0;
         totalFitness = std::accumulate(pop.begin(), pop.end(), static_cast<size_t>(0), [](size_t init, const PopElement& elem){ return init + elem.fitness; });
-        
+
 #if defined(PROCESS_THREADS_GEN)
         {
             thread_pool tPool(threadsAmountGen);
@@ -567,8 +557,22 @@ int main()
         ++epoch;
     }
 
-    //size_t reward = runGame(pop[0].val);
-    //printf("reward = %zd\n", reward);
+}
+
+int main()
+{
+
+    if(sizeof(size_t) < 8)
+    {
+        printf("Use 64bit compiler");
+        return 0;
+    }
+
+    Population pop;
+    initPopulation(pop);
+    loadState(pop);
+
+    geneticSearch(pop);
 
     return 0;
 }
