@@ -6,6 +6,19 @@
 #include <numeric>
 #include <queue>
 
+//genetics
+const size_t populationSize = 10000;
+const float crossoverRate = 0.7f;
+const float mutationRate = 0.001f;
+
+//parallel
+#define PROCESS_THREADS
+#define PROCESS_THREADS_GEN
+const size_t threadsAmount = 10;
+const size_t threadsAmountGen = 10;
+
+
+//main
 const size_t width = 29;
 const size_t height = 19;
 
@@ -174,10 +187,6 @@ struct PopElement
 
 typedef std::vector<PopElement> Population;
 
-const size_t populationSize = 100;
-const float crossoverRate = 0.7f;
-const float mutationRate = 0.001f;
-
 void initPopulation(Population& pop)
 {
     pop.resize(populationSize);
@@ -327,9 +336,7 @@ public:
     }
 };
 
-#define PROCESS_THREADS
-
-size_t assignFitness(Population& pop, Chromo& best)
+size_t assignFitness(Population& pop, Chromo& best, size_t& bestIndex)
 {
     size_t bestReward = 0;
 
@@ -337,7 +344,6 @@ size_t assignFitness(Population& pop, Chromo& best)
     std::vector<size_t> rewards(populationSize);
 
     {
-        size_t threadsAmount = 10;
         thread_pool tPool(threadsAmount);
 
         auto processLambda = [&](size_t start, size_t end){
@@ -363,8 +369,9 @@ size_t assignFitness(Population& pop, Chromo& best)
     }
 
     auto maxEl = std::max_element(rewards.begin(), rewards.end());
+    bestIndex = maxEl - rewards.begin();
     bestReward = (*maxEl);
-    best = pop[maxEl - rewards.begin()].val;
+    best = pop[bestIndex].val;
 #else
     for(size_t q = 0; q < populationSize; ++q)
     {
@@ -374,6 +381,7 @@ size_t assignFitness(Population& pop, Chromo& best)
         {
             bestReward = reward;
             best = pop[q].val;
+            bestIndex = q;
         }
 
         pop[q].fitness = reward;
@@ -484,15 +492,18 @@ int main()
 
     Chromo bestTotal;
     size_t totalBestReward = 0;
+    size_t bestIndex;
+    bool resultUpdated = false;
 
     while(epoch < maxEpoch)
     {
         printf("Epoch: %5zd ", epoch);
 
         Chromo best;
-        size_t bestReward = assignFitness(pop, best);
+        size_t bestReward = assignFitness(pop, best, bestIndex);
         if(bestReward > totalBestReward)
         {
+            resultUpdated = true;
             bestTotal = best;
             totalBestReward = bestReward;
 
@@ -509,6 +520,36 @@ int main()
         size_t totalFitness = 0;
         totalFitness = std::accumulate(pop.begin(), pop.end(), static_cast<size_t>(0), [](size_t init, const PopElement& elem){ return init + elem.fitness; });
         
+#if defined(PROCESS_THREADS_GEN)
+        {
+            thread_pool tPool(threadsAmountGen);
+
+            auto processLambda = [&](size_t start, size_t end){
+                for(size_t q = start; q < end; q += 2)
+                {
+                    PopElement elemA = roulette(pop, totalFitness);
+                    PopElement elemB = roulette(pop, totalFitness);
+                    std::pair<PopElement, PopElement> cross = crossover(elemA, elemB);
+                    mutate(cross.first);
+                    mutate(cross.second);
+                    if(!resultUpdated || bestIndex != q || bestIndex != q + 1)
+                    {
+                        pop[q + 0] = cross.first;
+                        pop[q + 1] = cross.second;
+                    }
+                }
+            };
+
+            size_t batch = populationSize / threadsAmount;
+
+            for(size_t q = 0; q < threadsAmount; ++q)
+            {
+                size_t start = q * batch;
+                size_t end = (q + 1) * batch;
+                tPool.enqueue(processLambda, start, end);
+            }
+        }
+#else
         for(size_t q = 0; q < populationSize; q += 2)
         {
             PopElement elemA = roulette(pop, totalFitness);
@@ -516,9 +557,13 @@ int main()
             std::pair<PopElement, PopElement> cross = crossover(elemA, elemB);
             mutate(cross.first);
             mutate(cross.second);
-            pop[q + 0] = cross.first;
-            pop[q + 1] = cross.second;
+            if(!resultUpdated || bestIndex != q || bestIndex != q + 1)
+            {
+                pop[q + 0] = cross.first;
+                pop[q + 1] = cross.second;
+            }
         }
+#endif
 
         ++epoch;
     }
