@@ -19,12 +19,11 @@ const float F = 0.5f;
 
 //parallel
 #define PROCESS_THREADS
-#define PROCESS_THREADS_GEN
+//#define PROCESS_THREADS_GEN
 const size_t threadsAmount = 10;
 const size_t threadsAmountGen = 10;
 
 //other
-const size_t maxEpoch = 100000;
 size_t refreshEvery = 5;
 
 
@@ -496,7 +495,7 @@ void geneticSearch(Population& pop)
     size_t bestIndex;
     bool resultUpdated = false;
 
-    while(epoch < maxEpoch)
+    while(1)
     {
         printf("Epoch: %5zd ", epoch);
 
@@ -507,6 +506,8 @@ void geneticSearch(Population& pop)
                 pop[q].val = bestTotal;
             }
         }
+
+        std::chrono::steady_clock::time_point timeStart = std::chrono::steady_clock::now();
 
         Chromo best;
         size_t bestReward = assignFitness(pop, best, bestIndex);
@@ -524,7 +525,7 @@ void geneticSearch(Population& pop)
             }
         }
 
-        printf("total best reward: %zd best reward: %zd\n", totalBestReward, bestReward);
+        printf("total best reward: %zd best reward: %zd ", totalBestReward, bestReward);
 
         size_t totalFitness = 0;
         totalFitness = std::accumulate(pop.begin(), pop.end(), static_cast<size_t>(0), [](size_t init, const PopElement& elem){ return init + elem.fitness; });
@@ -549,9 +550,9 @@ void geneticSearch(Population& pop)
                 }
             };
 
-            size_t batch = populationSize / threadsAmount;
+            size_t batch = populationSize / threadsAmountGen;
 
-            for(size_t q = 0; q < threadsAmount; ++q)
+            for(size_t q = 0; q < threadsAmountGen; ++q)
             {
                 size_t start = q * batch;
                 size_t end = (q + 1) * batch;
@@ -573,6 +574,11 @@ void geneticSearch(Population& pop)
             }
         }
 #endif
+
+        long long timeTaken = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+        float ms = static_cast<float>(timeTaken) / 1000.0f / 1000.0f;
+
+        printf("epoch time = %5.1fs\n", ms);
 
         ++epoch;
     }
@@ -596,7 +602,7 @@ void diffEvolutionSearch(Population& pop)
         }
     }
 
-    while(epoch < maxEpoch)
+    while(1)
     {
         printf("Epoch: %5zd ", epoch);
 
@@ -604,6 +610,8 @@ void diffEvolutionSearch(Population& pop)
         std::uniform_real_distribution rDist(0.0f, 1.0f);
 
         size_t bestReward = 0;
+
+        std::chrono::steady_clock::time_point timeStart = std::chrono::steady_clock::now();
 
         for(size_t q = 0; q < populationSize; ++q)
         {
@@ -670,7 +678,10 @@ void diffEvolutionSearch(Population& pop)
             }
         }
 
-        printf("total best reward: %zd best reward: %zd\n", totalBestReward, bestReward);
+        long long timeTaken = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+        float ms = static_cast<float>(timeTaken) / 1000.0f / 1000.0f;
+
+        printf("total best reward: %zd best reward: %zd epoch time = %5.1f\n", totalBestReward, bestReward, ms);
 
         ++epoch;
     }
