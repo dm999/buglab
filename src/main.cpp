@@ -282,6 +282,42 @@ void chromoFromMaze(const Maze& maze, Chromo& chromo)
     }
 }
 
+void loadState(Population& pop)
+{
+    std::string inputLine;
+
+    std::ifstream file(State);
+    if(file.is_open())
+    {
+        Maze maze;
+        initMaze(maze);
+
+        for(size_t q = 0; q < maxHeight; ++q)
+        {
+            getline(file, inputLine);
+            for(size_t w = 0; w < maxWidth; ++w)
+            {
+                if(inputLine[w] == '#')
+                {
+                    maze[q * maxWidth + w] = wall;
+
+                    if(q == 0 || w == 0 || q == maxHeight - 1 || w == maxWidth - 1)
+                    {
+                        maze[q * maxWidth + w] = externalWall;
+                    }
+                }
+            }
+        }
+
+        for(size_t q = 0; q < populationSizeAndElite; ++q)
+        {
+            chromoFromMaze(maze, pop[q].val);
+        }
+
+        printMaze(maze);
+    }
+}
+
 Score runGame(const Chromo& chromo)
 {
     Maze maze;
@@ -293,6 +329,18 @@ Score runGame(const Chromo& chromo)
     bool isExit = runMaze(maze, reward);
 
     return reward;
+}
+
+std::string printRewardFriendly(Score reward)
+{
+    std::string out = std::to_string(reward);
+    std::string out2;
+    for(size_t q = 0; q < out.size(); ++q)
+    {
+        out2.insert(out2.begin(), out[out.size() - q - 1]);
+        if((q + 1) % 3 == 0 && q != out.size() - 1) out2.insert(out2.begin(), ' ');
+    }
+    return out2;
 }
 
 
@@ -481,42 +529,6 @@ PopElement roulette(const Population& pop, Score totalFitness)
     return pop[populationSizeAndElite - 1];
 }
 
-void loadState(Population& pop)
-{
-    std::string inputLine;
-
-    std::ifstream file(State);
-    if(file.is_open())
-    {
-        Maze maze;
-        initMaze(maze);
-
-        for(size_t q = 0; q < maxHeight; ++q)
-        {
-            getline(file, inputLine);
-            for(size_t w = 0; w < maxWidth; ++w)
-            {
-                if(inputLine[w] == '#')
-                {
-                    maze[q * maxWidth + w] = wall;
-
-                    if(q == 0 || w == 0 || q == maxHeight - 1 || w == maxWidth - 1)
-                    {
-                        maze[q * maxWidth + w] = externalWall;
-                    }
-                }
-            }
-        }
-
-        for(size_t q = 0; q < populationSizeAndElite; ++q)
-        {
-            chromoFromMaze(maze, pop[q].val);
-        }
-
-        printMaze(maze);
-    }
-}
-
 void geneticSearch(Population& pop)
 {
 
@@ -566,7 +578,7 @@ void geneticSearch(Population& pop)
         }
 
         //printf("total best reward: %zu best reward: %zu ", totalBestReward, bestReward);
-        std::cout << "total best reward: " << totalBestReward << "  best reward: " << bestReward << " ";
+        std::cout << "reward: " << totalBestReward << " (" << printRewardFriendly(totalBestReward) << ")" << "  reward iter: " << bestReward << " ";
 
         Score totalFitness = 0;
         totalFitness = std::accumulate(pop.begin(), pop.end(), static_cast<Score>(0), [](Score init, const PopElement& elem){ return init + elem.fitness; });
@@ -722,7 +734,7 @@ void diffEvolutionSearch(Population& pop)
         long long timeTaken = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
         float ms = static_cast<float>(timeTaken) / 1000.0f / 1000.0f;
 
-        std::cout << "total best reward: " << totalBestReward << "  best reward: " << bestReward << " ";
+        std::cout << "reward: " << totalBestReward << " (" << printRewardFriendly(totalBestReward) << ")" << "  reward iter: " << bestReward << " ";
         printf("epoch time = %5.1f\n", ms);
 
         ++epoch;
@@ -779,7 +791,7 @@ int main()
     Score reward = runGame(pop[0].val);
     long long timeTaken = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
     float ms = static_cast<float>(timeTaken) / 1000.0f / 1000.0f;
-    std::cout << "reward = " << reward << " ";
+    std::cout << "reward = " << reward << " (" << printRewardFriendly(reward) << ") ";
     printf("time = %.1fs\n", ms);
 
 #endif
