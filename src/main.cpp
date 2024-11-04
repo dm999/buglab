@@ -725,6 +725,29 @@ int main()
 
     printf("Total population size: %zd, among them elite: %zd\n", populationSizeAndElite, elite);
 
+    if(populationSizeAndElite % 2 != 0)
+    {
+        printf("Population size is incorrect, should be even\n");
+    }
+
+#if defined(PROCESS_THREADS)
+    printf("Threads: %zd\n", threadsAmount);
+    if(threadsAmount > populationSize || populationSize % threadsAmount != 0)
+    {
+        printf("Incorrect threads amount\n");
+        return 0;
+    }
+#endif
+
+#if defined(PROCESS_THREADS_GEN)
+    printf("Threads for gen: %zd\n", threadsAmountGen);
+    if(threadsAmountGen > populationSizeAndElite || populationSizeAndElite % threadsAmountGen != 0 || (populationSizeAndElite / threadsAmountGen) % 2 != 0)
+    {
+        printf("Incorrect threads for gen amount\n");
+        return 0;
+    }
+#endif
+
     geneticSearch(pop);
     //diffEvolutionSearch(pop);
 
