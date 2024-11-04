@@ -43,6 +43,7 @@ size_t refreshEvery = 0xFFFFFFFF;
 #else
 size_t refreshEvery = 0xFFFFFFFF;
 #endif
+size_t redefineSeedIfNoChangeEvery = 0xFFFFFFF;
 
 //main
 const size_t width = 29;
@@ -539,6 +540,8 @@ void geneticSearch(Population& pop)
     size_t bestIndex;
     bool resultUpdated = false;
 
+    size_t epochsWithoutUpdate = 0;
+
     while(1)
     {
         if(epoch % refreshEvery == 0)//refresh
@@ -550,17 +553,26 @@ void geneticSearch(Population& pop)
             }
         }
 
+        if(epochsWithoutUpdate >= redefineSeedIfNoChangeEvery)
+        {
+            epochsWithoutUpdate = 0;
+            gen = std::mt19937(rd());
+            printf("Refresh rnd generator\n");
+        }
+
         printf("Epoch: %5zd ", epoch);
 
         std::chrono::steady_clock::time_point timeStart = std::chrono::steady_clock::now();
 
         Chromo best;
         Score bestReward = assignFitness(pop, best, bestIndex);
+        ++epochsWithoutUpdate;
         if(bestReward > totalBestReward)
         {
             resultUpdated = true;
             bestTotal = best;
             totalBestReward = bestReward;
+            epochsWithoutUpdate = 0;
 
             {
                 Maze maze;
