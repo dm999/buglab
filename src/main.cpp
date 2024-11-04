@@ -221,8 +221,11 @@ bool runMaze(Maze& maze, Score& reward)
     return true;
 }
 
+//rnd
 std::random_device rd;
 std::mt19937 gen(rd());
+std::uniform_real_distribution dist(0.0f, 1.0f);
+
 typedef std::array<bool, width * height> Chromo;
 struct PopElement
 {
@@ -235,8 +238,6 @@ typedef std::vector<PopElement> Population;
 void initPopulation(Population& pop)
 {
     pop.resize(populationSizeAndElite);
-
-    std::uniform_real_distribution dist(0.0f, 1.0f);
 
     for(size_t q = 0; q < populationSizeAndElite; ++q)
     {
@@ -428,8 +429,6 @@ Score assignFitness(Population& pop, Chromo& best, size_t& bestIndex)
 
 void mutate(PopElement& elem)
 {
-    std::uniform_real_distribution dist(0.0f, 1.0f);
-
     for(size_t w = 0; w < elem.val.size(); ++w)
     {
         if(dist(gen) < mutationRate)
@@ -442,8 +441,6 @@ void mutate(PopElement& elem)
 std::pair<PopElement, PopElement> crossover(const PopElement& elemA, const PopElement& elemB)
 {
     std::pair<PopElement, PopElement> ret(elemA, elemB);
-
-    std::uniform_real_distribution dist(0.0f, 1.0f);
 
     if(dist(gen) < crossoverRate)
     {
@@ -461,8 +458,6 @@ std::pair<PopElement, PopElement> crossover(const PopElement& elemA, const PopEl
 
 PopElement roulette(const Population& pop, Score totalFitness)
 {
-    std::uniform_real_distribution dist(0.0f, 1.0f);
-
     Score slice = dist(gen) * totalFitness;
 
     Score fitnesThreshold = 0;
@@ -635,7 +630,7 @@ void diffEvolutionSearch(Population& pop)
     {
         printf("Epoch: %5zd ", epoch);
 
-        std::uniform_int_distribution<> dist(0, populationSize - 1);
+        std::uniform_int_distribution<> iDist(0, populationSize - 1);
         std::uniform_real_distribution rDist(0.0f, 1.0f);
 
         Score bestReward = 0;
@@ -644,11 +639,11 @@ void diffEvolutionSearch(Population& pop)
 
         for(size_t q = 0; q < populationSize; ++q)
         {
-            size_t indexA = dist(gen), indexB = dist(gen), indexC = dist(gen);
+            size_t indexA = iDist(gen), indexB = iDist(gen), indexC = iDist(gen);
 
-            while(indexA == q) indexA = dist(gen);
-            while(indexB == q || indexB == indexA) indexB = dist(gen);
-            while(indexC == q || indexC == indexA || indexC == indexB) indexC = dist(gen);
+            while(indexA == q) indexA = iDist(gen);
+            while(indexB == q || indexB == indexA) indexB = iDist(gen);
+            while(indexC == q || indexC == indexA || indexC == indexB) indexC = iDist(gen);
 
             size_t R = static_cast<size_t>(rDist(gen) * width * height) - 1;
 
