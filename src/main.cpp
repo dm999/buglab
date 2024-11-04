@@ -17,8 +17,8 @@
 
 //genetics
 #if !defined(BUGGED)
-const size_t populationSize = 10000;
-const size_t elite = 100;
+const size_t populationSize = 100;
+const size_t elite = 50;
 #else
 const size_t populationSize = 10;
 const size_t elite = 50;
