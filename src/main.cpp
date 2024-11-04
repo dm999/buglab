@@ -51,6 +51,7 @@ const size_t maxHeight = height + 2;
 typedef int64_t MazeData;
 
 const MazeData wall = 1000000000;
+const MazeData externalWall = 0x7FFFFFFFFFFFFFFF;
 
 typedef std::array<MazeData, maxWidth * maxHeight> Maze;
 typedef uint64_t Score;
@@ -68,14 +69,14 @@ void initMaze(Maze& maze)
     //border
     for(size_t q = 0; q < maxWidth; ++q)
     {
-        maze[q] = wall;
-        maze[(maxHeight - 1) * maxWidth + q] = wall;
+        maze[q] = externalWall;
+        maze[(maxHeight - 1) * maxWidth + q] = externalWall;
     }
 
     for(size_t q = 0; q < maxHeight; ++q)
     {
-        maze[q * maxWidth] = wall;
-        maze[q * maxWidth + maxWidth - 1] = wall;
+        maze[q * maxWidth] = externalWall;
+        maze[q * maxWidth + maxWidth - 1] = externalWall;
     }
 }
 
@@ -88,7 +89,7 @@ void saveMaze(const Maze& maze)
         {
             for(size_t w = 0; w < maxWidth; ++w)
             {
-                if(maze[q * maxWidth + w] == wall) fprintf(f, "#");
+                if(maze[q * maxWidth + w] == wall || maze[q * maxWidth + w] == externalWall) fprintf(f, "#");
                 else fprintf(f, ".");
             }
 
@@ -106,6 +107,7 @@ void printMaze(const Maze& maze)
         for(size_t w = 0; w < maxWidth; ++w)
         {
             if(maze[q * maxWidth + w] == wall) printf("#");
+            else if(maze[q * maxWidth + w] == externalWall) printf("*");
             else printf(".");
         }
         printf("\n");
@@ -491,7 +493,15 @@ void loadState(Population& pop)
             getline(file, inputLine);
             for(size_t w = 0; w < maxWidth; ++w)
             {
-                if(inputLine[w] == '#') maze[q * maxWidth + w] = wall;
+                if(inputLine[w] == '#')
+                {
+                    maze[q * maxWidth + w] = wall;
+
+                    if(q == 0 || w == 0 || q == maxHeight - 1 || w == maxWidth - 1)
+                    {
+                        maze[q * maxWidth + w] = externalWall;
+                    }
+                }
             }
         }
 
