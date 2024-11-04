@@ -48,10 +48,11 @@ const size_t height = 19;
 const size_t maxWidth = width + 2;
 const size_t maxHeight = height + 2;
 
-const size_t wall = 1000000000;
+typedef int64_t MazeData;
 
-typedef std::array<size_t, maxWidth * maxHeight> Maze;
+const MazeData wall = 1000000000;
 
+typedef std::array<MazeData, maxWidth * maxHeight> Maze;
 typedef uint64_t Score;
 
 #if defined(BUGGED)
@@ -62,7 +63,7 @@ const char* State = "map.txt";
 
 void initMaze(Maze& maze)
 {
-    memset(&maze[0], 0, sizeof(size_t) * maxWidth * maxHeight);
+    memset(&maze[0], 0, sizeof(MazeData) * maxWidth * maxHeight);
 
     //border
     for(size_t q = 0; q < maxWidth; ++q)
@@ -159,7 +160,8 @@ bool runMaze(Maze& maze, Score& reward)
     int kx = 1, ky = 1;
     Score n = 0;
     int dir = 0;
-    int kx2, ky2, down, right, up, left, cur;
+    int kx2, ky2;
+    MazeData down, right, up, left, cur;
 
     while(1)
     {
