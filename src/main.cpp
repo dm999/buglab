@@ -8,9 +8,17 @@
 #include <string>
 #include <fstream>
 
+//bugged?
+//#define BUGGED
+
 //genetics
+#if !defined(BUGGED)
 const size_t populationSize = 10000;
 const size_t elite = 100;
+#else
+const size_t populationSize = 50;
+const size_t elite = 50;
+#endif
 const size_t populationSizeAndElite = populationSize + elite;
 const float crossoverRate = 0.7f;
 const float mutationRate = 0.001f;
@@ -26,8 +34,11 @@ const size_t threadsAmount = 10;
 const size_t threadsAmountGen = 10;
 
 //other
-size_t refreshEvery = 50000;
-
+#if !defined(BUGGED)
+size_t refreshEvery = 0xFFFFFFFF;
+#else
+size_t refreshEvery = 0xFFFFFFFF;
+#endif
 
 //main
 const size_t width = 29;
@@ -39,6 +50,14 @@ const size_t maxHeight = height + 2;
 const size_t wall = 1000000000;
 
 typedef std::array<size_t, maxWidth * maxHeight> Maze;
+
+typedef uint64_t Score;
+
+#if defined(BUGGED)
+const char* State = "map_bug.txt";
+#else
+const char* State = "map.txt";
+#endif
 
 void initMaze(Maze& maze)
 {
@@ -60,7 +79,7 @@ void initMaze(Maze& maze)
 
 void saveMaze(const Maze& maze)
 {
-    FILE * f = fopen("map.txt", "wt");
+    FILE * f = fopen(State, "wt");
     if(f)
     {
         for(size_t q = 0; q < maxHeight; ++q)
@@ -93,8 +112,9 @@ void printMaze(const Maze& maze)
 
 bool isExitExists(const Maze& maze)
 {
-
+#if !defined(BUGGED)
     if(maze[1 * maxWidth + 1] == wall) return false;//comment this line to get >2B score
+#endif
     if(maze[height * maxWidth + width] == wall) return false;
 
     Maze visited(maze);
@@ -129,14 +149,14 @@ bool isExitExists(const Maze& maze)
     return false;
 }
 
-bool runMaze(Maze& maze, size_t& reward)
+bool runMaze(Maze& maze, Score& reward)
 {
     reward = 0;
 
     if(!isExitExists(maze)) return false;
 
     int kx = 1, ky = 1;
-    size_t n = 0;
+    Score n = 0;
     int dir = 0;
     int kx2, ky2, down, right, up, left, cur;
 
@@ -207,7 +227,7 @@ typedef std::array<bool, width * height> Chromo;
 struct PopElement
 {
     Chromo val;
-    size_t fitness;
+    Score fitness;
 };
 
 typedef std::vector<PopElement> Population;
@@ -253,14 +273,14 @@ void chromoFromMaze(const Maze& maze, Chromo& chromo)
     }
 }
 
-size_t runGame(const Chromo& chromo)
+Score runGame(const Chromo& chromo)
 {
     Maze maze;
     initMaze(maze);
 
     mazeFromChromo(chromo, maze);
 
-    size_t reward;
+    Score reward;
     bool isExit = runMaze(maze, reward);
 
     return reward;
@@ -350,12 +370,12 @@ public:
     }
 };
 
-size_t assignFitness(Population& pop, Chromo& best, size_t& bestIndex)
+Score assignFitness(Population& pop, Chromo& best, size_t& bestIndex)
 {
-    size_t bestReward = 0;
+    Score bestReward = 0;
 
 #if defined(PROCESS_THREADS)
-    std::vector<size_t> rewards(populationSize);
+    std::vector<Score> rewards(populationSize);
 
     {
         thread_pool tPool(threadsAmount);
@@ -363,7 +383,7 @@ size_t assignFitness(Population& pop, Chromo& best, size_t& bestIndex)
         auto processLambda = [&](size_t start, size_t end){
             for(size_t q = start; q < end; ++q)
             {
-                size_t reward = runGame(pop[q].val);
+                Score reward = runGame(pop[q].val);
 
                 rewards[q] = reward;
 
@@ -389,7 +409,7 @@ size_t assignFitness(Population& pop, Chromo& best, size_t& bestIndex)
 #else
     for(size_t q = 0; q < populationSize; ++q)
     {
-        size_t reward = runGame(pop[q].val);
+        Score reward = runGame(pop[q].val);
 
         if(reward > bestReward)
         {
@@ -439,13 +459,13 @@ std::pair<PopElement, PopElement> crossover(const PopElement& elemA, const PopEl
     return ret;
 }
 
-PopElement roulette(const Population& pop, size_t totalFitness)
+PopElement roulette(const Population& pop, Score totalFitness)
 {
     std::uniform_real_distribution dist(0.0f, 1.0f);
 
     size_t slice = dist(gen) * totalFitness;
 
-    size_t fitnesThreshold = 0;
+    Score fitnesThreshold = 0;
     for(size_t q = 0; q < populationSizeAndElite; ++q)
     {
         fitnesThreshold += pop[q].fitness;
@@ -462,8 +482,7 @@ void loadState(Population& pop)
 {
     std::string inputLine;
 
-    FILE * f = fopen("map.txt", "rt");
-    std::ifstream file("map.txt");
+    std::ifstream file(State);
     if(file.is_open())
     {
         Maze maze;
@@ -493,26 +512,27 @@ void geneticSearch(Population& pop)
     size_t epoch = 1;
 
     Chromo bestTotal;
-    size_t totalBestReward = 0;
+    Score totalBestReward = 0;
     size_t bestIndex;
     bool resultUpdated = false;
 
     while(1)
     {
-        printf("Epoch: %5zd ", epoch);
-
         if(epoch % refreshEvery == 0)//refresh
         {
+            printf("Refresh population with best chromo\n");
             for(size_t q = 0; q < populationSizeAndElite; ++q)
             {
                 pop[q].val = bestTotal;
             }
         }
 
+        printf("Epoch: %5zd ", epoch);
+
         std::chrono::steady_clock::time_point timeStart = std::chrono::steady_clock::now();
 
         Chromo best;
-        size_t bestReward = assignFitness(pop, best, bestIndex);
+        Score bestReward = assignFitness(pop, best, bestIndex);
         if(bestReward > totalBestReward)
         {
             resultUpdated = true;
@@ -536,8 +556,8 @@ void geneticSearch(Population& pop)
 
         printf("total best reward: %zu best reward: %zu ", totalBestReward, bestReward);
 
-        size_t totalFitness = 0;
-        totalFitness = std::accumulate(pop.begin(), pop.end(), static_cast<size_t>(0), [](size_t init, const PopElement& elem){ return init + elem.fitness; });
+        Score totalFitness = 0;
+        totalFitness = std::accumulate(pop.begin(), pop.end(), static_cast<Score>(0), [](Score init, const PopElement& elem){ return init + elem.fitness; });
 
 #if defined(PROCESS_THREADS_GEN)
         {
@@ -599,12 +619,12 @@ void diffEvolutionSearch(Population& pop)
 {
     size_t epoch = 1;
 
-    size_t totalBestReward = 0;
+    Score totalBestReward = 0;
 
     {
         Chromo best;
         size_t bestIndex;
-        size_t bestReward = assignFitness(pop, best, bestIndex);
+        Score bestReward = assignFitness(pop, best, bestIndex);
         if(bestReward > totalBestReward)
         {
             totalBestReward = bestReward;
@@ -618,7 +638,7 @@ void diffEvolutionSearch(Population& pop)
         std::uniform_int_distribution<> dist(0, populationSize - 1);
         std::uniform_real_distribution rDist(0.0f, 1.0f);
 
-        size_t bestReward = 0;
+        Score bestReward = 0;
 
         std::chrono::steady_clock::time_point timeStart = std::chrono::steady_clock::now();
 
@@ -661,7 +681,7 @@ void diffEvolutionSearch(Population& pop)
                 //}
             }
 
-            size_t reward = runGame(newElem);
+            Score reward = runGame(newElem);
 
             if(reward > bestReward)
             {
@@ -699,15 +719,11 @@ void diffEvolutionSearch(Population& pop)
 int main()
 {
 
-    if(sizeof(size_t) < 8)
-    {
-        printf("Use 64bit compiler");
-        return 0;
-    }
-
     Population pop;
     initPopulation(pop);
     loadState(pop);
+
+    printf("Total population size: %zd, among them elite: %zd\n", populationSizeAndElite, elite);
 
     geneticSearch(pop);
     //diffEvolutionSearch(pop);
