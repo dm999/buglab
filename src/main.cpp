@@ -463,7 +463,7 @@ PopElement roulette(const Population& pop, Score totalFitness)
 {
     std::uniform_real_distribution dist(0.0f, 1.0f);
 
-    size_t slice = dist(gen) * totalFitness;
+    Score slice = dist(gen) * totalFitness;
 
     Score fitnesThreshold = 0;
     for(size_t q = 0; q < populationSizeAndElite; ++q)
