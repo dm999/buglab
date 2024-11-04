@@ -7,6 +7,7 @@
 #include <queue>
 #include <string>
 #include <fstream>
+#include <iostream>
 
 //bugged?
 //#define BUGGED
@@ -16,7 +17,7 @@
 const size_t populationSize = 10000;
 const size_t elite = 100;
 #else
-const size_t populationSize = 50;
+const size_t populationSize = 10;
 const size_t elite = 50;
 #endif
 const size_t populationSizeAndElite = populationSize + elite;
@@ -549,7 +550,8 @@ void geneticSearch(Population& pop)
             pop[q].fitness = totalBestReward;
         }
 
-        printf("total best reward: %zu best reward: %zu ", totalBestReward, bestReward);
+        //printf("total best reward: %zu best reward: %zu ", totalBestReward, bestReward);
+        std::cout << "total best reward: " << totalBestReward << "  best reward: " << bestReward << " ";
 
         Score totalFitness = 0;
         totalFitness = std::accumulate(pop.begin(), pop.end(), static_cast<Score>(0), [](Score init, const PopElement& elem){ return init + elem.fitness; });
@@ -705,7 +707,8 @@ void diffEvolutionSearch(Population& pop)
         long long timeTaken = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
         float ms = static_cast<float>(timeTaken) / 1000.0f / 1000.0f;
 
-        printf("total best reward: %zu best reward: %zu epoch time = %5.1f\n", totalBestReward, bestReward, ms);
+        std::cout << "total best reward: " << totalBestReward << "  best reward: " << bestReward << " ";
+        printf("epoch time = %5.1f\n", ms);
 
         ++epoch;
     }
