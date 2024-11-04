@@ -1,0 +1,13 @@
+single game execution 32vs64 code time comparison:
+
+21B (21560125302)
+32b: 140.5s
+64b: 58.8s
+
+71B (71504548182)
+32b: 467.1s
+64b: 190.1s
+
+92B (92015203472)
+32b: 607.6s
+64b: 247s
