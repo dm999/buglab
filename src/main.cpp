@@ -12,6 +12,9 @@
 //bugged?
 //#define BUGGED
 
+//run only single game
+//#define RUN_SINGLE_GAME_ONLY
+
 //genetics
 #if !defined(BUGGED)
 const size_t populationSize = 10000;
@@ -728,6 +731,12 @@ void diffEvolutionSearch(Population& pop)
 
 int main()
 {
+    if(sizeof(size_t) < 8)
+    {
+        printf("32bit application is slower, suggest to use 64bit\n");
+    }
+
+#if !defined(RUN_SINGLE_GAME_ONLY)
 
     Population pop;
     initPopulation(pop);
@@ -760,6 +769,19 @@ int main()
 
     geneticSearch(pop);
     //diffEvolutionSearch(pop);
+#else
 
+    Population pop;
+    initPopulation(pop);
+    loadState(pop);
+    printf("Run single game: ");
+    std::chrono::steady_clock::time_point timeStart = std::chrono::steady_clock::now();
+    Score reward = runGame(pop[0].val);
+    long long timeTaken = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+    float ms = static_cast<float>(timeTaken) / 1000.0f / 1000.0f;
+    std::cout << "reward = " << reward << " ";
+    printf("time = %.1fs\n", ms);
+
+#endif
     return 0;
 }
