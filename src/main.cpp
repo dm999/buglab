@@ -534,7 +534,7 @@ void geneticSearch(Population& pop)
             pop[q].fitness = totalBestReward;
         }
 
-        printf("total best reward: %zd best reward: %zd ", totalBestReward, bestReward);
+        printf("total best reward: %zu best reward: %zu ", totalBestReward, bestReward);
 
         size_t totalFitness = 0;
         totalFitness = std::accumulate(pop.begin(), pop.end(), static_cast<size_t>(0), [](size_t init, const PopElement& elem){ return init + elem.fitness; });
@@ -690,7 +690,7 @@ void diffEvolutionSearch(Population& pop)
         long long timeTaken = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
         float ms = static_cast<float>(timeTaken) / 1000.0f / 1000.0f;
 
-        printf("total best reward: %zd best reward: %zd epoch time = %5.1f\n", totalBestReward, bestReward, ms);
+        printf("total best reward: %zu best reward: %zu epoch time = %5.1f\n", totalBestReward, bestReward, ms);
 
         ++epoch;
     }
