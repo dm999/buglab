@@ -17,15 +17,15 @@
 
 //genetics
 #if !defined(BUGGED)
-const size_t populationSize = 100;
-const size_t elite = 50;
+const size_t populationSize = 1000;
+const size_t elite = 100;
 #else
 const size_t populationSize = 10;
 const size_t elite = 50;
 #endif
 const size_t populationSizeAndElite = populationSize + elite;
-const float crossoverRate = 0.7f;
-const float mutationRate = 0.001f;
+const float crossoverRate = 1.0f;
+const float mutationRate = 0.002f;
 
 //diff evolution
 const float CR = 0.5f;
@@ -33,7 +33,7 @@ const float F = 0.5f;
 
 //parallel
 #define PROCESS_THREADS
-//#define PROCESS_THREADS_GEN
+#define PROCESS_THREADS_GEN
 const size_t threadsAmount = 10;
 const size_t threadsAmountGen = 10;
 
