@@ -34,7 +34,7 @@ enum SelectionAlgo
 };
 //SelectionAlgo SelAlgo = SelectionAlgo::AlgoRoulette;
 SelectionAlgo SelAlgo = SelectionAlgo::AlgoTournament;
-size_t tournamentSize = 3;
+size_t tournamentSize = 4;
 
 //diff evolution
 const float CR = 0.5f;
@@ -48,7 +48,7 @@ const size_t threadsAmountGen = 10;
 
 //other
 #if !defined(BUGGED)
-size_t refreshEvery = 0xFFFFFFFF;
+size_t refreshEvery = 200;
 #else
 size_t refreshEvery = 0xFFFFFFFF;
 #endif
