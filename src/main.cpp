@@ -26,6 +26,15 @@ const size_t elite = 50;
 const size_t populationSizeAndElite = populationSize + elite;
 const float crossoverRate = 1.0f;
 const float mutationRate = 0.002f;
+//https://cstheory.stackexchange.com/questions/14758/tournament-selection-in-genetic-algorithms
+enum SelectionAlgo
+{
+    AlgoRoulette,
+    AlgoTournament
+};
+//SelectionAlgo SelAlgo = SelectionAlgo::AlgoRoulette;
+SelectionAlgo SelAlgo = SelectionAlgo::AlgoTournament;
+size_t tournamentSize = 3;
 
 //diff evolution
 const float CR = 0.5f;
@@ -234,6 +243,7 @@ bool runMaze(Maze& maze, Score& reward)
 std::random_device rd;
 std::mt19937 gen(rd());
 std::uniform_real_distribution dist(0.0f, 1.0f);
+std::uniform_int_distribution<> iDist(0, populationSize - 1);
 
 typedef std::array<bool, width * height> Chromo;
 struct PopElement
@@ -530,6 +540,28 @@ PopElement roulette(const Population& pop, Score totalFitness)
     return pop[populationSizeAndElite - 1];
 }
 
+PopElement tournament(const Population& pop, size_t tournamentSize)
+{
+    size_t selected = 0xFFFFFFFF;
+    for(size_t q = 0; q < tournamentSize; ++q)
+    {
+        size_t selectedTmp = iDist(gen);
+        if(selected == 0xFFFFFFFF)
+        {
+            selected = selectedTmp;
+        }
+        else
+        {
+            if(pop[selectedTmp].fitness > pop[selected].fitness)
+            {
+                selected = selectedTmp;
+            }
+        }
+    }
+
+    return pop[selected];
+}
+
 void geneticSearch(Population& pop)
 {
 
@@ -593,7 +625,10 @@ void geneticSearch(Population& pop)
         std::cout << "reward: " << totalBestReward << " (" << printRewardFriendly(totalBestReward) << ")" << "  reward iter: " << bestReward << " ";
 
         Score totalFitness = 0;
-        totalFitness = std::accumulate(pop.begin(), pop.end(), static_cast<Score>(0), [](Score init, const PopElement& elem){ return init + elem.fitness; });
+        if(SelAlgo == SelectionAlgo::AlgoRoulette)
+        {
+            totalFitness = std::accumulate(pop.begin(), pop.end(), static_cast<Score>(0), [](Score init, const PopElement& elem){ return init + elem.fitness; });
+        }
 
 #if defined(PROCESS_THREADS_GEN)
         {
@@ -602,8 +637,18 @@ void geneticSearch(Population& pop)
             auto processLambda = [&](size_t start, size_t end){
                 for(size_t q = start; q < end; q += 2)
                 {
-                    PopElement elemA = roulette(pop, totalFitness);
-                    PopElement elemB = roulette(pop, totalFitness);
+                    PopElement elemA;
+                    PopElement elemB;
+                    if(SelAlgo == SelectionAlgo::AlgoRoulette)
+                    {
+                        elemA = roulette(pop, totalFitness);
+                        elemB = roulette(pop, totalFitness);
+                    }
+                    else if(SelAlgo == SelectionAlgo::AlgoTournament)
+                    {
+                        elemA = tournament(pop, tournamentSize);
+                        elemB = tournament(pop, tournamentSize);
+                    }
                     std::pair<PopElement, PopElement> cross = crossover(elemA, elemB);
                     mutate(cross.first);
                     mutate(cross.second);
@@ -627,8 +672,18 @@ void geneticSearch(Population& pop)
 #else
         for(size_t q = 0; q < populationSizeAndElite; q += 2)
         {
-            PopElement elemA = roulette(pop, totalFitness);
-            PopElement elemB = roulette(pop, totalFitness);
+            PopElement elemA;
+            PopElement elemB;
+            if(SelAlgo == SelectionAlgo::AlgoRoulette)
+            {
+                elemA = roulette(pop, totalFitness);
+                elemB = roulette(pop, totalFitness);
+            }
+            else if(SelAlgo == SelectionAlgo::AlgoTournament)
+            {
+                elemA = tournament(pop, tournamentSize);
+                elemB = tournament(pop, tournamentSize);
+            }
             std::pair<PopElement, PopElement> cross = crossover(elemA, elemB);
             mutate(cross.first);
             mutate(cross.second);
