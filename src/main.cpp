@@ -34,7 +34,7 @@ enum SelectionAlgo
 };
 //SelectionAlgo SelAlgo = SelectionAlgo::AlgoRoulette;
 SelectionAlgo SelAlgo = SelectionAlgo::AlgoTournament;
-size_t tournamentSize = 4;
+size_t tournamentSize = 3;
 
 //diff evolution
 const float CR = 0.5f;
@@ -48,7 +48,7 @@ const size_t threadsAmountGen = 10;
 
 //other
 #if !defined(BUGGED)
-size_t refreshEvery = 200;
+size_t refreshEvery = 0xFFFFFFFF;
 #else
 size_t refreshEvery = 0xFFFFFFFF;
 #endif
@@ -244,6 +244,7 @@ std::random_device rd;
 std::mt19937 gen(rd());
 std::uniform_real_distribution dist(0.0f, 1.0f);
 std::uniform_int_distribution<> iDist(0, populationSize - 1);
+std::uniform_int_distribution<> iDistElite(0, populationSizeAndElite - 1);
 
 typedef std::array<bool, width * height> Chromo;
 struct PopElement
@@ -545,7 +546,7 @@ PopElement tournament(const Population& pop, size_t tournamentSize)
     size_t selected = 0xFFFFFFFF;
     for(size_t q = 0; q < tournamentSize; ++q)
     {
-        size_t selectedTmp = iDist(gen);
+        size_t selectedTmp = iDistElite(gen);
         if(selected == 0xFFFFFFFF)
         {
             selected = selectedTmp;
@@ -622,7 +623,7 @@ void geneticSearch(Population& pop)
         }
 
         //printf("total best reward: %zu best reward: %zu ", totalBestReward, bestReward);
-        std::cout << "reward: " << totalBestReward << " (" << printRewardFriendly(totalBestReward) << ")" << "  reward iter: " << bestReward << " ";
+        std::cout << "reward: " << printRewardFriendly(totalBestReward) << "  reward iter: " << printRewardFriendly(bestReward) << " ";
 
         Score totalFitness = 0;
         if(SelAlgo == SelectionAlgo::AlgoRoulette)
