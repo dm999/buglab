@@ -18,7 +18,7 @@
 //genetics
 #if !defined(BUGGED)
 const size_t populationSize = 1000;
-const size_t elite = 100;
+const size_t elite = 20;
 #else
 const size_t populationSize = 10;
 const size_t elite = 50;
@@ -47,6 +47,7 @@ const size_t threadsAmount = 10;
 const size_t threadsAmountGen = 10;
 
 //other
+#define STAT
 #if !defined(BUGGED)
 size_t refreshEvery = 0xFFFFFFFF;
 #else
@@ -622,8 +623,15 @@ void geneticSearch(Population& pop)
             pop[q].fitness = totalBestReward;
         }
 
+#if defined(STAT)
+        Population pop2(pop);
+        std::sort(pop2.begin(), pop2.end(), [](const PopElement& elemA, const PopElement& elemB){ return elemA.fitness < elemB.fitness; });
+        printf("reward: %10s  iter best: %10s  middle: %10s  100: %10s ", printRewardFriendly(totalBestReward).c_str(), printRewardFriendly(bestReward).c_str(), printRewardFriendly(pop2[populationSize / 2].fitness).c_str(), printRewardFriendly(pop2[100].fitness).c_str());
+#else
         //printf("total best reward: %zu best reward: %zu ", totalBestReward, bestReward);
-        std::cout << "reward: " << printRewardFriendly(totalBestReward) << "  reward iter: " << printRewardFriendly(bestReward) << " ";
+        printf("reward: %10s iter best: %10s ", printRewardFriendly(totalBestReward).c_str(), printRewardFriendly(bestReward).c_str());
+        //std::cout << "reward: " << printRewardFriendly(totalBestReward) << "  reward iter: " << printRewardFriendly(bestReward) << " ";
+#endif
 
         Score totalFitness = 0;
         if(SelAlgo == SelectionAlgo::AlgoRoulette)
@@ -827,6 +835,7 @@ int main()
     if(populationSizeAndElite % 2 != 0)
     {
         printf("Population size is incorrect, should be even\n");
+        return 0;
     }
 
 #if defined(PROCESS_THREADS)
