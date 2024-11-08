@@ -30,6 +30,8 @@ public:
 
     size_t tournament(const Population& population, std::vector<Score>& tournamentFitness, std::vector<size_t>& tournamentIndex) const
     {
+        std::uniform_real_distribution dist(0.0f, 1.0f);
+        std::uniform_int_distribution<> iDistElite(0, populationSizeAndElite - 1);
 
         // return the index of winner
         size_t i = 0;

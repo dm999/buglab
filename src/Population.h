@@ -16,6 +16,8 @@ typedef std::vector<PopElement> Population;
 
 void initPopulation(Population& pop)
 {
+    std::uniform_real_distribution dist(0.0f, 1.0f);
+
     pop.resize(populationSizeAndElite);
 
     for(size_t q = 0; q < populationSizeAndElite; ++q)

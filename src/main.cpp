@@ -18,7 +18,7 @@
 //genetics
 #if !defined(BUGGED)
 const size_t populationSize = 1000;
-const size_t elite = 0;
+const size_t elite = 20;
 #else
 const size_t populationSize = 10;
 const size_t elite = 50;
@@ -45,7 +45,7 @@ const float F = 0.5f;
 
 //parallel
 #define PROCESS_THREADS
-#define PROCESS_THREADS_GEN
+//#define PROCESS_THREADS_GEN
 const size_t threadsAmount = 10;
 const size_t threadsAmountGen = 10;
 
@@ -64,9 +64,6 @@ size_t redefineSeedIfNoChangeEvery = 0xFFFFFFFF;
 //rnd
 std::random_device rd;
 std::mt19937 gen(rd());
-std::uniform_real_distribution dist(0.0f, 1.0f);
-std::uniform_int_distribution<> iDist(0, populationSize - 1);
-std::uniform_int_distribution<> iDistElite(0, populationSizeAndElite - 1);
 
 #include "ThreadPool.h"
 #include "Population.h"
@@ -78,6 +75,8 @@ TournamentSelection tournamentSel(tournamentSize, selectionProbability);
 
 void mutate(PopElement& elem)
 {
+    std::uniform_real_distribution dist(0.0f, 1.0f);
+
     for(size_t w = 0; w < elem.val.size(); ++w)
     {
         if(dist(gen) < mutationRate)
@@ -89,6 +88,8 @@ void mutate(PopElement& elem)
 
 std::pair<PopElement, PopElement> crossover(const PopElement& elemA, const PopElement& elemB)
 {
+    std::uniform_real_distribution dist(0.0f, 1.0f);
+
     std::pair<PopElement, PopElement> ret(elemA, elemB);
 
     if(dist(gen) < crossoverRate)
@@ -107,6 +108,8 @@ std::pair<PopElement, PopElement> crossover(const PopElement& elemA, const PopEl
 
 PopElement roulette(const Population& pop, Score totalFitness)
 {
+    std::uniform_real_distribution dist(0.0f, 1.0f);
+
     Score slice = dist(gen) * totalFitness;
 
     Score fitnesThreshold = 0;
@@ -124,6 +127,8 @@ PopElement roulette(const Population& pop, Score totalFitness)
 
 PopElement tournament(const Population& pop, size_t tournamentSize)
 {
+    std::uniform_int_distribution<> iDistElite(0, populationSizeAndElite - 1);
+
     size_t selected = 0xFFFFFFFF;
     for(size_t q = 0; q < tournamentSize; ++q)
     {
