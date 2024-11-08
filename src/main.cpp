@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <cmath>
 #include <array>
 #include <vector>
 #include <cstring>
@@ -18,14 +19,17 @@
 //genetics
 #if !defined(BUGGED)
 const size_t populationSize = 1000;
-const size_t elite = 20;
+const size_t elite = 2;
 #else
 const size_t populationSize = 10;
 const size_t elite = 50;
 #endif
 const size_t populationSizeAndElite = populationSize + elite;
 const float crossoverRate = 1.0f;
-const float mutationRate = 0.002f;
+float mutationRate = 0.002f;
+const float mutationRateFrom = 0.001f;
+const float mutationRateTo = 0.003f;
+const size_t mutationRatePeriod = 20000;
 //https://cstheory.stackexchange.com/questions/14758/tournament-selection-in-genetic-algorithms
 enum SelectionAlgo
 {
@@ -60,6 +64,7 @@ size_t refreshEvery = 0xFFFFFFFF;
 size_t redefineSeedIfNoChangeEvery = 0xFFFFFFFF;
 
 
+const double pi = std::acos(-1);
 
 //rnd
 std::random_device rd;
@@ -163,6 +168,9 @@ void geneticSearch(Population& pop)
 
     while(1)
     {
+
+        mutationRate = mutationRateFrom + (std::sin(pi * (((static_cast<float>(epoch) / static_cast<float>(mutationRatePeriod)) * 360.0f) - 90.0f) / 180.0f) * 0.5f + 0.5f) * (mutationRateTo - mutationRateFrom);
+
         if(epoch % refreshEvery == 0)//refresh
         {
             printf("Refresh population with best chromo\n");
@@ -212,7 +220,7 @@ void geneticSearch(Population& pop)
 #if defined(STAT)
         Population pop2(pop);
         std::sort(pop2.begin(), pop2.end(), [](const PopElement& elemA, const PopElement& elemB){ return elemA.fitness < elemB.fitness; });
-        printf("reward: %10s  iter best: %10s  middle: %10s  100: %10s ", printRewardFriendly(totalBestReward).c_str(), printRewardFriendly(bestReward).c_str(), printRewardFriendly(pop2[populationSize / 2].fitness).c_str(), printRewardFriendly(pop2[100].fitness).c_str());
+        printf("reward: %10s  iter best: %10s  middle: %10s  100: %10s  mr: %.4f ", printRewardFriendly(totalBestReward).c_str(), printRewardFriendly(bestReward).c_str(), printRewardFriendly(pop2[populationSize / 2].fitness).c_str(), printRewardFriendly(pop2[100].fitness).c_str(), mutationRate);
 #else
         //printf("total best reward: %zu best reward: %zu ", totalBestReward, bestReward);
         printf("reward: %10s iter best: %10s ", printRewardFriendly(totalBestReward).c_str(), printRewardFriendly(bestReward).c_str());
