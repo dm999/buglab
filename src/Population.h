@@ -92,7 +92,7 @@ void loadState(Population& pop)
     }
 }
 
-Score runGame(const Chromo& chromo)
+Score runGame(const Chromo& chromo, bool isSaveMazeWithWeights = false)
 {
     Maze maze;
     initMaze(maze);
@@ -101,6 +101,11 @@ Score runGame(const Chromo& chromo)
 
     Score reward;
     bool isExit = runMaze(maze, reward);
+
+    if(isSaveMazeWithWeights)
+    {
+        saveMazeWithWeights("w.txt", maze);
+    }
 
     return reward;
 }
