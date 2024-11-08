@@ -18,7 +18,7 @@
 //genetics
 #if !defined(BUGGED)
 const size_t populationSize = 1000;
-const size_t elite = 20;
+const size_t elite = 0;
 #else
 const size_t populationSize = 10;
 const size_t elite = 50;
@@ -34,7 +34,10 @@ enum SelectionAlgo
 };
 //SelectionAlgo SelAlgo = SelectionAlgo::AlgoRoulette;
 SelectionAlgo SelAlgo = SelectionAlgo::AlgoTournament;
-size_t tournamentSize = 3;
+//size_t tournamentSize = 3;
+size_t tournamentSize = 10;
+//float selectionProbability = 0.85f;
+float selectionProbability = 0.5f;
 
 //diff evolution
 const float CR = 0.5f;
@@ -47,13 +50,14 @@ const size_t threadsAmount = 10;
 const size_t threadsAmountGen = 10;
 
 //other
+#define NEW_TOURNAMENT
 #define STAT
 #if !defined(BUGGED)
 size_t refreshEvery = 0xFFFFFFFF;
 #else
 size_t refreshEvery = 0xFFFFFFFF;
 #endif
-size_t redefineSeedIfNoChangeEvery = 0xFFFFFFF;
+size_t redefineSeedIfNoChangeEvery = 0xFFFFFFFF;
 
 
 
@@ -69,7 +73,7 @@ std::uniform_int_distribution<> iDistElite(0, populationSizeAndElite - 1);
 #include "Maze.h"
 #include "Tournament.h"
 
-TournamentSelection tournamentSel(populationSizeAndElite);
+TournamentSelection tournamentSel(tournamentSize, selectionProbability);
 
 
 void mutate(PopElement& elem)
@@ -163,7 +167,8 @@ void geneticSearch(Population& pop)
             }
         }
 
-        if(epochsWithoutUpdate >= redefineSeedIfNoChangeEvery)
+        if(epoch % redefineSeedIfNoChangeEvery == 0)
+        //if(epochsWithoutUpdate >= redefineSeedIfNoChangeEvery)
         {
             epochsWithoutUpdate = 0;
             gen = std::mt19937(rd());
@@ -231,12 +236,15 @@ void geneticSearch(Population& pop)
                     }
                     else if(SelAlgo == SelectionAlgo::AlgoTournament)
                     {
+#if defined(NEW_TOURNAMENT)
                         size_t elA, elB;
                         tournamentSel.select(pop, elA, elB);
                         elemA = pop[elA];
                         elemB = pop[elB];
-                        //elemA = tournament(pop, tournamentSize);
-                        //elemB = tournament(pop, tournamentSize);
+#else
+                        elemA = tournament(pop, tournamentSize);
+                        elemB = tournament(pop, tournamentSize);
+#endif
                     }
                     std::pair<PopElement, PopElement> cross = crossover(elemA, elemB);
                     mutate(cross.first);
@@ -270,12 +278,15 @@ void geneticSearch(Population& pop)
             }
             else if(SelAlgo == SelectionAlgo::AlgoTournament)
             {
+#if defined(NEW_TOURNAMENT)
                 size_t elA, elB;
                 tournamentSel.select(pop, elA, elB);
                 elemA = pop[elA];
                 elemB = pop[elB];
-                //elemA = tournament(pop, tournamentSize);
-                //elemB = tournament(pop, tournamentSize);
+#else
+                elemA = tournament(pop, tournamentSize);
+                elemB = tournament(pop, tournamentSize);
+#endif
             }
             std::pair<PopElement, PopElement> cross = crossover(elemA, elemB);
             mutate(cross.first);

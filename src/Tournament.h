@@ -6,33 +6,30 @@ class TournamentSelection
 {
 public:
 
-    TournamentSelection(size_t populationSize) : mSelectionProbability(0.85f)
+    TournamentSelection(size_t tournamentSize, float selectionProbability = 0.85f) : mTournamentSize(tournamentSize), mSelectionProbability(selectionProbability)
     {
-        mTournamentSize = std::max<size_t>(2, static_cast<size_t>(static_cast<float>(populationSize) *0.1f ));
+        //mTournamentSize = std::max<size_t>(2, static_cast<size_t>(static_cast<float>(populationSize) *0.1f ));
     }
 
     void select(const Population& population, size_t &indexA, size_t &indexB) const
     {
-        indexA = tournament(population);
-        indexB = tournament(population);
+        std::vector<Score> tournamentFitness(mTournamentSize);
+        std::vector<size_t> tournamentIndex(mTournamentSize);
+
+        indexA = tournament(population, tournamentFitness, tournamentIndex);
+        indexB = tournament(population, tournamentFitness, tournamentIndex);
 
         std::uniform_int_distribution<> dst(0, mTournamentSize - 1);
 
         while(indexA == indexB)
         {
-            indexA = dst(gen);
-            indexB = dst(gen);
+            indexA = tournamentIndex[dst(gen)];
+            indexB = tournamentIndex[dst(gen)];
         }
     }
 
-    size_t tournament(const Population& population) const
+    size_t tournament(const Population& population, std::vector<Score>& tournamentFitness, std::vector<size_t>& tournamentIndex) const
     {
-
-        std::vector<Score> tournamentFitness;
-        std::vector<size_t> tournamentIndex;
-
-        tournamentFitness.resize(mTournamentSize);
-        tournamentIndex.resize(mTournamentSize);
 
         // return the index of winner
         size_t i = 0;
