@@ -67,7 +67,8 @@ def py_compute(cnp.ndarray[cnp.uint8_t, ndim = 2] task, int threads):
     ndarray = np.array(array_wrapper, copy=False)
     
     # Assign our object to the 'base' of the ndarray object
-    ndarray.base = <PyObject*> array_wrapper
+    #ndarray.base = <PyObject*> array_wrapper
+    cnp.PyArray_SetBaseObject(ndarray, array_wrapper) 
     
     # Increment the reference count, as the above assignement was done in
     # C, and Python does not know that there is this additional reference
