@@ -15,6 +15,7 @@
 
 //run only single game
 //#define RUN_SINGLE_GAME_ONLY
+//#define SAVE_HEATMAP
 
 //genetics
 #if !defined(BUGGED)
@@ -28,7 +29,7 @@ const size_t populationSizeAndElite = populationSize + elite;
 const float crossoverRate = 1.0f;
 float mutationRate = 0.002f;
 const float mutationRateFrom = 0.001f;
-const float mutationRateTo = 0.01f;
+const float mutationRateTo = 0.004f;
 const size_t mutationRatePeriod = 2000;
 //https://cstheory.stackexchange.com/questions/14758/tournament-selection-in-genetic-algorithms
 enum SelectionAlgo
@@ -487,7 +488,11 @@ int main()
     loadState(pop);
     printf("Run single game: ");
     std::chrono::steady_clock::time_point timeStart = std::chrono::steady_clock::now();
+#if !defined(SAVE_HEATMAP)
     Score reward = runGame(pop[0].val);
+#else
+    Score reward = runGame(pop[0].val, true);
+#endif
     long long timeTaken = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
     float ms = static_cast<float>(timeTaken) / 1000.0f / 1000.0f;
     std::cout << "reward = " << reward << " (" << printRewardFriendly(reward) << ") ";
