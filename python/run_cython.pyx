@@ -7,7 +7,7 @@ from cpython cimport PyObject, Py_INCREF
 cnp.import_array()
 
 cdef extern from "cfunc.cpp":
-    cnp.uint64_t *compute(int batch, int taskSize, cnp.uint8_t* task)
+    cnp.uint64_t *compute(int batch, int taskSize, cnp.uint8_t* task, int threads)
 
 #https://gist.github.com/phaustin/4973792
 #https://stackoverflow.com/questions/3046305/simple-wrapping-of-c-code-with-cython
@@ -50,7 +50,7 @@ cdef class ArrayWrapper:
         references to the object are gone. """
         free(<void*>self.data_ptr)
 
-def py_compute(cnp.ndarray[cnp.uint8_t, ndim = 2] task):
+def py_compute(cnp.ndarray[cnp.uint8_t, ndim = 2] task, int threads):
     """ Python binding of the 'compute' function in 'c_code.c' that does
         not copy the data allocated in C.
     """
@@ -60,7 +60,7 @@ def py_compute(cnp.ndarray[cnp.uint8_t, ndim = 2] task):
     assert task.shape[1] == 551
     
     # Call the C function
-    array = compute(task.shape[0], task.shape[1], <cnp.uint8_t*> task.data)
+    array = compute(task.shape[0], task.shape[1], <cnp.uint8_t*> task.data, threads)
 
     array_wrapper = ArrayWrapper()
     array_wrapper.set_data(task.shape[0], task.shape[1] + 1, <void*> array) 

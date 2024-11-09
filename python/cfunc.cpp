@@ -256,12 +256,12 @@ Score runGame(const Chromo& chromo, Maze& maze)
 }
 
 
-uint64_t * assignFitness(int batch, int taskSize, const uint8_t task[])
+uint64_t * assignFitness(int batches, int taskSize, const uint8_t task[])
 {
     typedef std::vector<Chromo> Population;
     
-    Population pop(batch);
-    for (size_t q = 0; q < batch; q++)
+    Population pop(batches);
+    for (size_t q = 0; q < batches; q++)
     {
         for (size_t w = 0; w < taskSize; w++)
         {
@@ -269,9 +269,11 @@ uint64_t * assignFitness(int batch, int taskSize, const uint8_t task[])
         }
     }
     
-    uint64_t* res = static_cast<uint64_t*>(malloc(sizeof(uint64_t) * batch * (taskSize + 1)));
+    uint64_t* res = static_cast<uint64_t*>(malloc(sizeof(uint64_t) * batches * (taskSize + 1)));
     
 #if defined(PROCESS_THREADS)
+    size_t batchLocal = batches / threadsAmount;
+    
     {
         thread_pool tPool(threadsAmount);
 
@@ -295,8 +297,6 @@ uint64_t * assignFitness(int batch, int taskSize, const uint8_t task[])
             }
         };
 
-        size_t batchLocal = batch / threadsAmount;
-
         for(size_t q = 0; q < threadsAmount; ++q)
         {
             size_t start = q * batchLocal;
@@ -304,9 +304,30 @@ uint64_t * assignFitness(int batch, int taskSize, const uint8_t task[])
             tPool.enqueue(processLambda, start, end);
         }
     }
+    
+    if(batches % threadsAmount != 0)
+    {
+        for(size_t q = batchLocal * threadsAmount; q < batches; ++q)
+        {
+            Maze maze;
+            initMaze(maze);
+            
+            Score reward = runGame(pop[q], maze);
+            
+            res[q * (taskSize + 1)] = reward;
+            
+            for(size_t w = 1; w < maxHeight - 1; ++w)
+            {
+                for(size_t e = 1; e < maxWidth - 1; ++e)
+                {
+                    res[q * (taskSize + 1) + (w - 1) * width + e] = maze[w * maxWidth + e];
+                }
+            }
+        }
+    }
 
 #else
-    for(size_t q = 0; q < batch; ++q)
+    for(size_t q = 0; q < batches; ++q)
     {
         Maze maze;
         initMaze(maze);
@@ -328,14 +349,14 @@ uint64_t * assignFitness(int batch, int taskSize, const uint8_t task[])
     return res;
 }
 
-uint64_t * compute(int batch, int taskSize, const uint8_t task[])
+uint64_t * compute(int batches, int taskSize, const uint8_t task[], int threads)
 {
-    threadsAmount = batch;
+    threadsAmount = threads;
     
-    //~ printf("%zd\n", batch);
+    //~ printf("%d %d\n", batches, threads);
     
 #if 0
-    for (size_t q = 0; q < batch; q++)
+    for (size_t q = 0; q < batches; q++)
     {
         for (size_t w = 0; w < taskSize; w++)
         {
@@ -346,11 +367,7 @@ uint64_t * compute(int batch, int taskSize, const uint8_t task[])
     printf("\n");
 #endif
     
-    uint64_t* array = assignFitness(batch, taskSize, task);
-    //~ array = static_cast<uint64_t*>(malloc(sizeof(uint64_t) * batch * taskSize));
-    //~ for (size_t q = 0; q < (batch * taskSize); q++)
-    //~ {
-        //~ array[q] = q;
-    //~ }
+    uint64_t* array = assignFitness(batches, taskSize, task);
+
     return array;
 }
