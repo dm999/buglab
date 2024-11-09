@@ -28,8 +28,8 @@ const size_t populationSizeAndElite = populationSize + elite;
 const float crossoverRate = 1.0f;
 float mutationRate = 0.002f;
 const float mutationRateFrom = 0.001f;
-const float mutationRateTo = 0.003f;
-const size_t mutationRatePeriod = 20000;
+const float mutationRateTo = 0.01f;
+const size_t mutationRatePeriod = 2000;
 //https://cstheory.stackexchange.com/questions/14758/tournament-selection-in-genetic-algorithms
 enum SelectionAlgo
 {
@@ -54,6 +54,7 @@ const size_t threadsAmount = 10;
 const size_t threadsAmountGen = 10;
 
 //other
+#define VARIABLE_MUTATION_RATE
 #define NEW_TOURNAMENT
 #define STAT
 #if !defined(BUGGED)
@@ -166,10 +167,23 @@ void geneticSearch(Population& pop)
 
     size_t epochsWithoutUpdate = 0;
 
+    float sign = 1.0f;
+
     while(1)
     {
-
+#if defined(VARIABLE_MUTATION_RATE)
+#if 0
         mutationRate = mutationRateFrom + (std::sin(pi * (((static_cast<float>(epoch) / static_cast<float>(mutationRatePeriod)) * 360.0f) - 90.0f) / 180.0f) * 0.5f + 0.5f) * (mutationRateTo - mutationRateFrom);
+#else
+        //sawtooth
+        {
+            if(epoch % (mutationRatePeriod / 2) == 0) sign *= -1.0f;
+            float fraction = static_cast<float>(epoch % (mutationRatePeriod / 2)) / static_cast<float>(mutationRatePeriod / 2);
+            if(sign < 0.0f) fraction = 1.0f - fraction;
+            mutationRate = mutationRateFrom + fraction * (mutationRateTo - mutationRateFrom);
+        }
+#endif
+#endif
 
         if(epoch % refreshEvery == 0)//refresh
         {
