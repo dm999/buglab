@@ -1,3 +1,6 @@
 /build
 /*.bat
 /*.exe
+/python/build
+/python/*.pyd
+/python/run_cython.cpp
