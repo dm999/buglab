@@ -165,6 +165,9 @@ epochs = 200
 train_batch_size = 512
 #~ train_batch_size = 10000
 
+run_training = 1
+#~ run_training = 0
+
 def fitness_func(ga_instance, solution, solution_idx):
     solution = solution > 0.5
     solution = np.concatenate((np.zeros(shape=(solution.shape[0], 1)), solution), axis=1)
@@ -175,103 +178,104 @@ def fitness_func(ga_instance, solution, solution_idx):
     #~ heatmap = res[:, 1:552].reshape(solution.shape[0], 1, 19, 29)
     
     global total_dataset_size
-    
-    select_batch = solution.shape[0]
-    
-    
-    if((total_dataset_size + select_batch) >= dataset_size):
-        select_batch = select_batch - ((total_dataset_size + select_batch) - dataset_size)
-    
-    #~ inputs = torch.from_numpy(solution.reshape(solution.shape[0], 1, 1, 551).astype(np.float32))
-    inputs = torch.from_numpy(solution.reshape(solution.shape[0], 1, 19, 29).astype(np.float32))
-    #~ labels = torch.from_numpy(res[:, 0].reshape(solution.shape[0], 1, 1, 1).astype(np.float32))
-    labels = torch.from_numpy(res[:, 0].reshape(solution.shape[0], 1).astype(np.float32))
-    #~ print(f"s {select_batch} sol {solution.shape[0]}")
-    batch_input[total_dataset_size:(total_dataset_size + select_batch)] = inputs[0:select_batch]
-    batch_label[total_dataset_size:(total_dataset_size + select_batch)] = labels[0:select_batch]
-    
-    total_dataset_size = total_dataset_size + select_batch
-    
-    
-    
-    if(total_dataset_size >= dataset_size):
+        
+    if(run_training):
+        select_batch = solution.shape[0]
+        
+        
+        if((total_dataset_size + select_batch) >= dataset_size):
+            select_batch = select_batch - ((total_dataset_size + select_batch) - dataset_size)
         
         #~ inputs = torch.from_numpy(solution.reshape(solution.shape[0], 1, 1, 551).astype(np.float32))
-        #~ inputs = Variable(torch.from_numpy(heatmap.astype(np.float32)).cuda())
-        #~ inputs = Variable(torch.from_numpy(solution.reshape(solution.shape[0], 1, 19, 29).astype(np.float32)).cuda())
+        inputs = torch.from_numpy(solution.reshape(solution.shape[0], 1, 19, 29).astype(np.float32))
+        #~ labels = torch.from_numpy(res[:, 0].reshape(solution.shape[0], 1, 1, 1).astype(np.float32))
+        labels = torch.from_numpy(res[:, 0].reshape(solution.shape[0], 1).astype(np.float32))
+        #~ print(f"s {select_batch} sol {solution.shape[0]}")
+        batch_input[total_dataset_size:(total_dataset_size + select_batch)] = inputs[0:select_batch]
+        batch_label[total_dataset_size:(total_dataset_size + select_batch)] = labels[0:select_batch]
+        
+        total_dataset_size = total_dataset_size + select_batch
+        
+        
+        
+        if(total_dataset_size >= dataset_size):
+            
+            #~ inputs = torch.from_numpy(solution.reshape(solution.shape[0], 1, 1, 551).astype(np.float32))
+            #~ inputs = Variable(torch.from_numpy(heatmap.astype(np.float32)).cuda())
+            #~ inputs = Variable(torch.from_numpy(solution.reshape(solution.shape[0], 1, 19, 29).astype(np.float32)).cuda())
 
-        dataset = torch.utils.data.TensorDataset(batch_input, batch_label)
-        dataloader = torch.utils.data.DataLoader(dataset, batch_size = train_batch_size, num_workers = 0, shuffle=True)
-        
-        total_dataset_size = 0
-        
-        for epoch in range(1, epochs + 1):
-        #~ epoch = 1
-        #~ while(1):
-            # monitor training loss
-            trainLoss = 0.0
-            for images, targets in dataloader:
-                images, targets = Variable(images.cuda()), Variable(targets.cuda()) 
-                optimizer.zero_grad()
-                model.train()
-                outputs = model(images)
-                loss = criterion(outputs, targets)
-                loss.backward()
-                optimizer.step()
-                trainLoss += loss.item() * images.size(0)
-                  
-            trainLoss = trainLoss / len(dataloader)
+            dataset = torch.utils.data.TensorDataset(batch_input, batch_label)
+            dataloader = torch.utils.data.DataLoader(dataset, batch_size = train_batch_size, num_workers = 0, shuffle=True)
             
-            if(trainLoss < 100000.0): 
-                break
+            total_dataset_size = 0
             
-            inputs = batch_input[0:50]
-            inputs = Variable(inputs.cuda()) 
-            predicted_reward = predict(inputs, model).cpu()
-            
-            #~ print(f"Epoch: {epoch:3d} Loss: {trainLoss:10.1f}    pred = {predicted_reward[0].item():7.0f} {predicted_reward[1].item():7.0f}    res = {batch_label[0][0][0][0]:7.0f} {batch_label[1][0][0][0]:7.0f}")
-            #~ print(f"Epoch: {epoch:3d} Loss: {trainLoss:10.1f}    pred = {predicted_reward[0].item():7.0f} {predicted_reward[1].item():7.0f}    res = {batch_label[0][0]:7.0f} {batch_label[1][0]:7.0f}")
-            print(f"Epoch: {epoch:3d} Loss: {trainLoss:10.1f}    pred = {predicted_reward[0].item():7.0f} {predicted_reward[1].item():7.0f}    res = {batch_label[0][0]:7.0f} {batch_label[1][0]:7.0f}")
-            #~ epoch = epoch + 1
-        
-        torch.save({'model_state_dict': model.state_dict(), 'optimizer_state_dict': optimizer.state_dict()}, "predict_reward.ckp")
-        
-        #~ for i in range(30):
-            #~ model.train()
-            #~ outputs = model(inputs)
-            #~ labels = Variable(torch.from_numpy(res[:, 0].reshape(solution.shape[0], 1).astype(np.float32)).cuda())
-            #~ loss = criterion(outputs, labels) 
-            #~ optimizer.zero_grad()
-            #~ loss.backward()
-            #~ optimizer.step() 
-            #~ if(loss.item() < 10): break
+            for epoch in range(1, epochs + 1):
+            #~ epoch = 1
+            #~ while(1):
+                # monitor training loss
+                trainLoss = 0.0
+                for images, targets in dataloader:
+                    images, targets = Variable(images.cuda()), Variable(targets.cuda()) 
+                    optimizer.zero_grad()
+                    model.train()
+                    outputs = model(images)
+                    loss = criterion(outputs, targets)
+                    loss.backward()
+                    optimizer.step()
+                    trainLoss += loss.item() * images.size(0)
+                      
+                trainLoss = trainLoss / len(dataloader)
                 
-        
-        #~ if(res[0][0] < 10000):
-            #~ print(f"out = {outputs}")
-            #~ print(f"label = {labels}")
-            #~ print(f"grad = {model.fc3.bias.grad}")
+                if(trainLoss < 300000.0): 
+                    break
+                
+                inputs = batch_input[0:50]
+                inputs = Variable(inputs.cuda()) 
+                predicted_reward = predict(inputs, model).cpu()
+                
+                #~ print(f"Epoch: {epoch:3d} Loss: {trainLoss:10.1f}    pred = {predicted_reward[0].item():7.0f} {predicted_reward[1].item():7.0f}    res = {batch_label[0][0][0][0]:7.0f} {batch_label[1][0][0][0]:7.0f}")
+                #~ print(f"Epoch: {epoch:3d} Loss: {trainLoss:10.1f}    pred = {predicted_reward[0].item():7.0f} {predicted_reward[1].item():7.0f}    res = {batch_label[0][0]:7.0f} {batch_label[1][0]:7.0f}")
+                print(f"Epoch: {epoch:3d} Loss: {trainLoss:10.1f}    pred = {predicted_reward[0].item():7.0f} {predicted_reward[1].item():7.0f}    res = {batch_label[0][0]:7.0f} {batch_label[1][0]:7.0f}")
+                #~ epoch = epoch + 1
+            
+            torch.save({'model_state_dict': model.state_dict(), 'optimizer_state_dict': optimizer.state_dict()}, "predict_reward.ckp")
+            
+            #~ for i in range(30):
+                #~ model.train()
+                #~ outputs = model(inputs)
+                #~ labels = Variable(torch.from_numpy(res[:, 0].reshape(solution.shape[0], 1).astype(np.float32)).cuda())
+                #~ loss = criterion(outputs, labels) 
+                #~ optimizer.zero_grad()
+                #~ loss.backward()
+                #~ optimizer.step() 
+                #~ if(loss.item() < 10): break
+                    
+            
+            #~ if(res[0][0] < 10000):
+                #~ print(f"out = {outputs}")
+                #~ print(f"label = {labels}")
+                #~ print(f"grad = {model.fc3.bias.grad}")
 
-                
-        #~ print(model.fc3.weight.grad)
-        #~ print(model.fc3.weight)
-        #~ print(f"{torch.min(model.fc1.weight.grad).item():5.2f} {torch.max(model.fc1.weight.grad).item():5.2f}  {torch.min(model.fc2.weight.grad).item():5.2f} {torch.max(model.fc2.weight.grad).item():5.2f}  {torch.min(model.fc3.weight.grad).item():5.2f} {torch.max(model.fc3.weight.grad).item():5.2f}")
-        #~ print(f"{torch.min(model.fc1.weight).item():5.2f} {torch.max(model.fc1.weight).item():5.2f}  {torch.min(model.fc2.weight).item():5.2f} {torch.max(model.fc2.weight).item():5.2f}  {torch.min(model.fc3.weight.grad).item():5.2f} {torch.max(model.fc3.weight).item():5.2f}")
-        
-        #~ if(torch.isnan(model.fc1.weight.grad).any() or torch.isnan(model.fc1.bias.grad).any()):
-            #~ printf("!!!!!!!!!!!!!")
-        #~ if(torch.isnan(model.fc2.weight.grad).any() or torch.isnan(model.fc2.bias.grad).any()):
-            #~ printf("!!!!!!!!!!!!!")
-        #~ if(torch.isnan(model.fc3.weight.grad).any() or torch.isnan(model.fc3.bias.grad).any()):
-            #~ printf("!!!!!!!!!!!!!")
-        
-        #~ predicted_reward = predict(inputs, model).cpu()
-        
-        #~ global total_fitness_cnt
-        #~ total_fitness_cnt = total_fitness_cnt + 1
-        #~ if(total_fitness_cnt % 5 == 0):
-        #~ print(f"Loss: {loss.item():10.1f}    pred = {predicted_reward[0].item():7.0f} {predicted_reward[1].item():7.0f}    res = {res[0][0]:7d} {res[1][0]:7d}")
-        
+                    
+            #~ print(model.fc3.weight.grad)
+            #~ print(model.fc3.weight)
+            #~ print(f"{torch.min(model.fc1.weight.grad).item():5.2f} {torch.max(model.fc1.weight.grad).item():5.2f}  {torch.min(model.fc2.weight.grad).item():5.2f} {torch.max(model.fc2.weight.grad).item():5.2f}  {torch.min(model.fc3.weight.grad).item():5.2f} {torch.max(model.fc3.weight.grad).item():5.2f}")
+            #~ print(f"{torch.min(model.fc1.weight).item():5.2f} {torch.max(model.fc1.weight).item():5.2f}  {torch.min(model.fc2.weight).item():5.2f} {torch.max(model.fc2.weight).item():5.2f}  {torch.min(model.fc3.weight.grad).item():5.2f} {torch.max(model.fc3.weight).item():5.2f}")
+            
+            #~ if(torch.isnan(model.fc1.weight.grad).any() or torch.isnan(model.fc1.bias.grad).any()):
+                #~ printf("!!!!!!!!!!!!!")
+            #~ if(torch.isnan(model.fc2.weight.grad).any() or torch.isnan(model.fc2.bias.grad).any()):
+                #~ printf("!!!!!!!!!!!!!")
+            #~ if(torch.isnan(model.fc3.weight.grad).any() or torch.isnan(model.fc3.bias.grad).any()):
+                #~ printf("!!!!!!!!!!!!!")
+            
+            #~ predicted_reward = predict(inputs, model).cpu()
+            
+            #~ global total_fitness_cnt
+            #~ total_fitness_cnt = total_fitness_cnt + 1
+            #~ if(total_fitness_cnt % 5 == 0):
+            #~ print(f"Loss: {loss.item():10.1f}    pred = {predicted_reward[0].item():7.0f} {predicted_reward[1].item():7.0f}    res = {res[0][0]:7d} {res[1][0]:7d}")
+            
     #~ print(res.shape)
     #~ print(f"res = {res[0][0]} {res[1][0]}")
     return res[:, 0]
