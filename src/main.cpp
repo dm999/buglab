@@ -223,6 +223,16 @@ void geneticSearch(Population& pop)
                 mazeFromChromo(bestTotal, maze);
                 saveMaze(maze);
             }
+
+            if(epoch != 1)
+            {
+                FILE * f = fopen("mr.txt", "at");
+                if(f)
+                {
+                    fprintf(f, "%zu %f\n", totalBestReward, mutationRate);
+                    fclose(f);
+                }
+            }
         }
 
         //elitism
