@@ -10,7 +10,7 @@ REQUIRES = ['numpy', 'cython']
 
 ext_1 = Extension("run_cython",
                   sources=["run_cython.pyx"],
-                  depends=['cfunc.cpp'],
+                  depends=['cfunc.cpp', 'genetics.cpp'],
                   language="c++",
                   include_dirs=[np.get_include()])
                   
