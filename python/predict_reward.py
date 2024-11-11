@@ -28,14 +28,14 @@ class NeuralNet(nn.Module):
         torch.manual_seed(0)
 
         self.conv1 = nn.Conv2d(1, 64, 3, 1, 1)
-        self.bn1 = nn.BatchNorm2d(64)
+        self.ln1 = nn.LayerNorm([64, 19, 29])
         self.conv2 = nn.Conv2d(64, 128, 3, 1, 1)
-        self.bn2 = nn.BatchNorm2d(128)
+        self.ln2 = nn.LayerNorm([128, 19, 29])
         #~ self.avgpool1 = nn.AvgPool2d(2, 2)
         self.conv3 = nn.Conv2d(128, 256, 3, 2, 1)
-        self.bn3 = nn.BatchNorm2d(256)
+        self.ln3 = nn.LayerNorm([256, 10, 15])
         self.conv4 = nn.Conv2d(256, 512, 3, 2, 1)
-        self.bn4 = nn.BatchNorm2d(512)
+        self.ln4 = nn.LayerNorm([512, 5, 8])
         
         self.conv5 = nn.Conv2d(128, 256, 1, 2, 0)
         self.conv6 = nn.Conv2d(256, 512, 1, 2, 0)
@@ -67,10 +67,10 @@ class NeuralNet(nn.Module):
         nn.init.xavier_uniform_(self.fc2.weight)
         nn.init.xavier_uniform_(self.fc3.weight)
         #~ nn.init.xavier_uniform_(self.fc4.weight)
-        nn.init.constant_(self.bn1.weight, 1)
-        nn.init.constant_(self.bn2.weight, 1)
-        nn.init.constant_(self.bn3.weight, 1)
-        nn.init.constant_(self.bn4.weight, 1)
+        #~ nn.init.constant_(self.bn1.weight, 1)
+        #~ nn.init.constant_(self.bn2.weight, 1)
+        #~ nn.init.constant_(self.bn3.weight, 1)
+        #~ nn.init.constant_(self.bn4.weight, 1)
 
         nn.init.zeros_(self.conv1.bias)
         nn.init.zeros_(self.conv2.bias)
@@ -82,17 +82,17 @@ class NeuralNet(nn.Module):
         nn.init.zeros_(self.fc2.bias)
         nn.init.zeros_(self.fc3.bias)
         #~ nn.init.zeros_(self.fc4.bias)
-        nn.init.constant_(self.bn1.bias, 0)
-        nn.init.constant_(self.bn2.bias, 0)
-        nn.init.constant_(self.bn3.bias, 0)
-        nn.init.constant_(self.bn4.bias, 0)
+        #~ nn.init.constant_(self.bn1.bias, 0)
+        #~ nn.init.constant_(self.bn2.bias, 0)
+        #~ nn.init.constant_(self.bn3.bias, 0)
+        #~ nn.init.constant_(self.bn4.bias, 0)
 
     def forward(self, x):
         out = self.conv1(x)
-        out = self.bn1(out)
+        out = self.ln1(out)
         out = self.act(out)
         out = self.conv2(out)
-        out = self.bn2(out)
+        out = self.ln2(out)
         out = self.act(out)
         out = out + x
         
@@ -100,10 +100,10 @@ class NeuralNet(nn.Module):
         
         res = out
         out = self.conv3(out)
-        out = self.bn3(out)
+        out = self.ln3(out)
         out = self.act(out)
         out = self.conv4(out)
-        out = self.bn4(out)
+        out = self.ln4(out)
         out = self.act(out)
         out = out + self.conv6(self.conv5(res))
         
@@ -118,7 +118,8 @@ class NeuralNet(nn.Module):
         out = self.act(out)
         out = self.fc2(out)
         out = self.act(out)
-        out = self.fc3(out) 
+        out = self.fc3(out)
+        out = self.act(out)#relu
 
 
 
@@ -219,15 +220,12 @@ def fitness_func(ga_instance, solution, solution_idx):
                     optimizer.zero_grad()
                     model.train()
                     outputs = model(images)
-                    loss = criterion(outputs, targets)
+                    loss = criterion(torch.log(outputs + 1), torch.log(targets + 1))
                     loss.backward()
                     optimizer.step()
                     trainLoss += loss.item() * images.size(0)
                       
                 trainLoss = trainLoss / len(dataloader)
-                
-                if(trainLoss < 300000.0): 
-                    break
                 
                 inputs = batch_input[0:50]
                 inputs = Variable(inputs.cuda()) 
@@ -237,6 +235,9 @@ def fitness_func(ga_instance, solution, solution_idx):
                 #~ print(f"Epoch: {epoch:3d} Loss: {trainLoss:10.1f}    pred = {predicted_reward[0].item():7.0f} {predicted_reward[1].item():7.0f}    res = {batch_label[0][0]:7.0f} {batch_label[1][0]:7.0f}")
                 print(f"Epoch: {epoch:3d} Loss: {trainLoss:10.1f}    pred = {predicted_reward[0].item():7.0f} {predicted_reward[1].item():7.0f}    res = {batch_label[0][0]:7.0f} {batch_label[1][0]:7.0f}")
                 #~ epoch = epoch + 1
+                
+                if(trainLoss < 50.0): 
+                    break
             
             torch.save({'model_state_dict': model.state_dict(), 'optimizer_state_dict': optimizer.state_dict()}, "predict_reward.ckp")
             

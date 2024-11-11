@@ -17,14 +17,14 @@ class NeuralNet(nn.Module):
 
 
         self.conv1 = nn.Conv2d(1, 64, 3, 1, 1)
-        self.bn1 = nn.BatchNorm2d(64, affine=False)
+        self.ln1 = nn.LayerNorm([64, 19, 29])
         self.conv2 = nn.Conv2d(64, 128, 3, 1, 1)
-        self.bn2 = nn.BatchNorm2d(128, affine=False)
+        self.ln2 = nn.LayerNorm([128, 19, 29])
         #~ self.avgpool1 = nn.AvgPool2d(2, 2)
         self.conv3 = nn.Conv2d(128, 256, 3, 2, 1)
-        self.bn3 = nn.BatchNorm2d(256, affine=False)
+        self.ln3 = nn.LayerNorm([256, 10, 15])
         self.conv4 = nn.Conv2d(256, 512, 3, 2, 1)
-        self.bn4 = nn.BatchNorm2d(512, affine=False)
+        self.ln4 = nn.LayerNorm([512, 5, 8])
         
         self.conv5 = nn.Conv2d(128, 256, 1, 2, 0)
         self.conv6 = nn.Conv2d(256, 512, 1, 2, 0)
@@ -49,19 +49,19 @@ class NeuralNet(nn.Module):
         with torch.no_grad():
             
             out = self.conv1(x)
-            out = self.bn1(out)
+            out = self.ln1(out)
             out = self.act(out)
             out = self.conv2(out)
-            out = self.bn2(out)
+            out = self.ln2(out)
             out = self.act(out)
             out = out + x
             
             res = out
             out = self.conv3(out)
-            out = self.bn3(out)
+            out = self.ln3(out)
             out = self.act(out)
             out = self.conv4(out)
-            out = self.bn4(out)
+            out = self.ln4(out)
             out = self.act(out)
             out = out + self.conv6(self.conv5(res))
             
@@ -70,7 +70,8 @@ class NeuralNet(nn.Module):
             out = self.act(out)
             out = self.fc2(out)
             out = self.act(out)
-            out = self.fc3(out) 
+            out = self.fc3(out)
+            out = self.act(out)#relu
             
             
             
@@ -97,14 +98,14 @@ model = NeuralNet()
 
 if(os.path.isfile("predict_reward.ckp")):
     checkpoint = torch.load("predict_reward.ckp")
-    checkpoint['model_state_dict'].pop('bn1.weight', None)
-    checkpoint['model_state_dict'].pop('bn1.bias', None)
-    checkpoint['model_state_dict'].pop('bn2.weight', None)
-    checkpoint['model_state_dict'].pop('bn2.bias', None)
-    checkpoint['model_state_dict'].pop('bn3.weight', None)
-    checkpoint['model_state_dict'].pop('bn3.bias', None)
-    checkpoint['model_state_dict'].pop('bn4.weight', None)
-    checkpoint['model_state_dict'].pop('bn4.bias', None)
+    #~ checkpoint['model_state_dict'].pop('bn1.weight', None)
+    #~ checkpoint['model_state_dict'].pop('bn1.bias', None)
+    #~ checkpoint['model_state_dict'].pop('bn2.weight', None)
+    #~ checkpoint['model_state_dict'].pop('bn2.bias', None)
+    #~ checkpoint['model_state_dict'].pop('bn3.weight', None)
+    #~ checkpoint['model_state_dict'].pop('bn3.bias', None)
+    #~ checkpoint['model_state_dict'].pop('bn4.weight', None)
+    #~ checkpoint['model_state_dict'].pop('bn4.bias', None)
     model.load_state_dict(checkpoint['model_state_dict'])
     
 print(f"fc1 {model.fc1.weight}")
