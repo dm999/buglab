@@ -40,7 +40,7 @@ void mazeFromChromo(const Chromo& chromo, Maze& maze)
     {
         for(size_t w = 0; w < width; ++w)
         {
-            maze[(q + 1) * maxWidth + w + 1] = chromo[q * width + w] * wall;
+            if(chromo[q * width + w]) maze[(q + 1) * maxWidth + w + 1] = wall;
         }
     }
 }
