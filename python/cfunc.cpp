@@ -10,6 +10,9 @@ size_t threadsAmount;
 const size_t width = 29;
 const size_t height = 19;
 
+//const size_t width = 5;
+//const size_t height = 3;
+
 const size_t maxWidth = width + 2;
 const size_t maxHeight = height + 2;
 
@@ -73,7 +76,7 @@ bool runMaze(Maze& maze, Score& reward)
 
     while(1)
     {
-        if((kx == 29) && (ky == 19))
+        if((kx == width) && (ky == height))
         {
             reward = n;
             return true;
