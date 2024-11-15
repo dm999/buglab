@@ -31,6 +31,8 @@ float mutationRate = 0.002f;
 const float mutationRateFrom = 0.001f;
 const float mutationRateTo = 0.004f;
 const size_t mutationRatePeriod = 2000;
+//const float asyncMutationFactor = 1.0f;
+const float asyncMutationFactor = 2.0f;
 //https://cstheory.stackexchange.com/questions/14758/tournament-selection-in-genetic-algorithms
 enum SelectionAlgo
 {
@@ -87,6 +89,30 @@ void mutate(PopElement& elem)
         if(dist(gen) < mutationRate)
         {
             elem.val[w] = !elem.val[w];
+        }
+    }
+}
+
+void asyncMutate(PopElement& elem)
+{
+    std::uniform_real_distribution dist(0.0f, 1.0f);
+
+    for(size_t w = 0; w < elem.val.size(); ++w)
+    {
+        float prob = dist(gen);
+        if(elem.val[w] == true)
+        {
+            if(prob < mutationRate)
+            {
+                elem.val[w] = false;
+            }
+        }
+        else
+        {
+            if(prob < (mutationRate / asyncMutationFactor))
+            {
+                elem.val[w] = true;
+            }
         }
     }
 }
@@ -279,8 +305,10 @@ void geneticSearch(Population& pop)
 #endif
             }
             std::pair<PopElement, PopElement> cross = crossover(elemA, elemB);
-            mutate(cross.first);
-            mutate(cross.second);
+            //mutate(cross.first);
+            //mutate(cross.second);
+            asyncMutate(cross.first);
+            asyncMutate(cross.second);
             //if(!resultUpdated || bestIndex != q || bestIndex != q + 1)
             {
                 pop[q + 0] = cross.first;
