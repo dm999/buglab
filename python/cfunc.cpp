@@ -16,10 +16,10 @@ const size_t height = 19;
 const size_t maxWidth = width + 2;
 const size_t maxHeight = height + 2;
 
-typedef int64_t MazeData;
+typedef uint64_t MazeData;
 
 const MazeData wall = 1000000000;
-const MazeData externalWall = 0x7FFFFFFFFFFFFFFF;
+const MazeData externalWall = 0xFFFFFFFFFFFFFFFF;
 
 typedef std::array<MazeData, maxWidth * maxHeight> Maze;
 typedef uint64_t Score;
