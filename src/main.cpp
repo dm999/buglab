@@ -50,9 +50,7 @@ const float F = 0.5f;
 
 //parallel
 #define PROCESS_THREADS
-//#define PROCESS_THREADS_GEN
 const size_t threadsAmount = 10;
-const size_t threadsAmountGen = 10;
 
 //other
 #define VARIABLE_MUTATION_RATE
@@ -258,53 +256,7 @@ void geneticSearch(Population& pop)
             totalFitness = std::accumulate(pop.begin(), pop.end(), static_cast<Score>(0), [](Score init, const PopElement& elem){ return init + elem.fitness; });
         }
 
-#if defined(PROCESS_THREADS_GEN)
-        {
-            thread_pool tPool(threadsAmountGen);
 
-            auto processLambda = [&](size_t start, size_t end){
-                for(size_t q = start; q < end; q += 2)
-                {
-                    PopElement elemA;
-                    PopElement elemB;
-                    if(SelAlgo == SelectionAlgo::AlgoRoulette)
-                    {
-                        elemA = roulette(pop, totalFitness);
-                        elemB = roulette(pop, totalFitness);
-                    }
-                    else if(SelAlgo == SelectionAlgo::AlgoTournament)
-                    {
-#if defined(NEW_TOURNAMENT)
-                        size_t elA, elB;
-                        tournamentSel.select(pop, elA, elB);
-                        elemA = pop[elA];
-                        elemB = pop[elB];
-#else
-                        elemA = tournament(pop, tournamentSize);
-                        elemB = tournament(pop, tournamentSize);
-#endif
-                    }
-                    std::pair<PopElement, PopElement> cross = crossover(elemA, elemB);
-                    mutate(cross.first);
-                    mutate(cross.second);
-                    //if(!resultUpdated || bestIndex != q || bestIndex != q + 1)
-                    {
-                        pop[q + 0] = cross.first;
-                        pop[q + 1] = cross.second;
-                    }
-                }
-            };
-
-            size_t batch = populationSizeAndElite / threadsAmountGen;
-
-            for(size_t q = 0; q < threadsAmountGen; ++q)
-            {
-                size_t start = q * batch;
-                size_t end = (q + 1) * batch;
-                tPool.enqueue(processLambda, start, end);
-            }
-        }
-#else
         for(size_t q = 0; q < populationSizeAndElite; q += 2)
         {
             PopElement elemA;
@@ -335,7 +287,6 @@ void geneticSearch(Population& pop)
                 pop[q + 1] = cross.second;
             }
         }
-#endif
 
         long long timeTaken = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
         float ms = static_cast<float>(timeTaken) / 1000.0f / 1000.0f;
@@ -476,15 +427,6 @@ int main()
     if(threadsAmount > populationSize || populationSize % threadsAmount != 0)
     {
         printf("Incorrect threads amount\n");
-        return 0;
-    }
-#endif
-
-#if defined(PROCESS_THREADS_GEN)
-    printf("Threads for gen: %zd\n", threadsAmountGen);
-    if(threadsAmountGen > populationSizeAndElite || populationSizeAndElite % threadsAmountGen != 0 || (populationSizeAndElite / threadsAmountGen) % 2 != 0)
-    {
-        printf("Incorrect threads for gen amount\n");
         return 0;
     }
 #endif
