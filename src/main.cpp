@@ -9,6 +9,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <utility>
 
 //bugged?
 //#define BUGGED
@@ -28,11 +29,16 @@ const size_t elite = 50;
 const size_t populationSizeAndElite = populationSize + elite;
 const float crossoverRate = 1.0f;
 float mutationRate = 0.002f;
-const float mutationRateFrom = 0.001f;
-const float mutationRateTo = 0.004f;
+typedef std::pair<float, float> MutationFactorRange;
+MutationFactorRange mutationRange = {0.001f, 0.004f};
+//MutationFactorRange mutationRange = {0.001f, 0.01f};
+//MutationFactorRange mutationRange = {0.004f, 0.01f};
+//MutationFactorRange mutationRange = {0.008f, 0.02f};
 const size_t mutationRatePeriod = 2000;
 //const float asyncMutationFactor = 1.0f;
 const float asyncMutationFactor = 2.0f;
+//const float asyncMutationFactor = 20.0f;
+//#define SPATIAL_BASED_MUTATION
 //https://cstheory.stackexchange.com/questions/14758/tournament-selection-in-genetic-algorithms
 enum SelectionAlgo
 {
@@ -99,17 +105,22 @@ void asyncMutate(PopElement& elem)
 
     for(size_t w = 0; w < elem.val.size(); ++w)
     {
+#if defined (SPATIAL_BASED_MUTATION)
+        float spatialWeight = static_cast<float>(w) / (static_cast<float>(width) * static_cast<float>(height)) + 0.0001f;
+#else
+        float spatialWeight = 1.0f;
+#endif
         float prob = dist(gen);
         if(elem.val[w] == true)
         {
-            if(prob < mutationRate)
+            if(prob < mutationRate / spatialWeight)
             {
                 elem.val[w] = false;
             }
         }
         else
         {
-            if(prob < (mutationRate / asyncMutationFactor))
+            if(prob < (mutationRate / (asyncMutationFactor / spatialWeight)))
             {
                 elem.val[w] = true;
             }
@@ -198,14 +209,14 @@ void geneticSearch(Population& pop)
     {
 #if defined(VARIABLE_MUTATION_RATE)
 #if 0
-        mutationRate = mutationRateFrom + (std::sin(pi * (((static_cast<float>(epoch) / static_cast<float>(mutationRatePeriod)) * 360.0f) - 90.0f) / 180.0f) * 0.5f + 0.5f) * (mutationRateTo - mutationRateFrom);
+        mutationRate = mutationRange.first + (std::sin(pi * (((static_cast<float>(epoch) / static_cast<float>(mutationRatePeriod)) * 360.0f) - 90.0f) / 180.0f) * 0.5f + 0.5f) * (mutationRange.second - mutationRange.first);
 #else
         //sawtooth
         {
             if(epoch % (mutationRatePeriod / 2) == 0) sign *= -1.0f;
             float fraction = static_cast<float>(epoch % (mutationRatePeriod / 2)) / static_cast<float>(mutationRatePeriod / 2);
             if(sign < 0.0f) fraction = 1.0f - fraction;
-            mutationRate = mutationRateFrom + fraction * (mutationRateTo - mutationRateFrom);
+            mutationRate = mutationRange.first + fraction * (mutationRange.second - mutationRange.first);
         }
 #endif
 #endif
