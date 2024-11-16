@@ -27,8 +27,8 @@ typedef uint64_t Score;
 
 bool isExitExists(const Maze& maze)
 {
-    if(maze[1 * maxWidth + 1] == wall) return false;
-    if(maze[height * maxWidth + width] == wall) return false;
+    if(maze[1 * maxWidth + 1] != 0) return false;
+    if(maze[height * maxWidth + width] != 0) return false;
 
     Maze visited(maze);
 

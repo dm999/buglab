@@ -96,9 +96,9 @@ void printMaze(const Maze& maze)
 bool isExitExists(const Maze& maze)
 {
 #if !defined(BUGGED)
-    if(maze[1 * maxWidth + 1] == wall) return false;//comment this line to get >2B score
+    if(maze[1 * maxWidth + 1] != 0) return false;//comment this line to get >2B score
 #endif
-    if(maze[height * maxWidth + width] == wall) return false;
+    if(maze[height * maxWidth + width] != 0) return false;
 
     Maze visited(maze);
 
