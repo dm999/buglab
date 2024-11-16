@@ -59,26 +59,6 @@ void saveMaze(const Maze& maze)
     }
 }
 
-void saveMazeWithWeights(const std::string& fileName, const Maze& maze)
-{
-    FILE * f = fopen(fileName.c_str(), "wt");
-    if(f)
-    {
-        for(size_t q = 1; q < maxHeight - 1; ++q)
-        {
-            for(size_t w = 1; w < maxWidth - 1; ++w)
-            {
-                if(maze[q * maxWidth + w] == wall) fprintf(f, "%6s ", "#");
-                else fprintf(f, "%6zd ", maze[q * maxWidth + w]);
-            }
-
-            fprintf(f, "\n");
-        }
-
-        fclose(f);
-    }
-}
-
 void printMaze(const Maze& maze)
 {
     for(size_t q = 0; q < maxHeight; ++q)

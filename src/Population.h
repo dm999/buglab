@@ -92,6 +92,28 @@ void loadState(Population& pop)
     }
 }
 
+void saveMazeWithWeights(const std::string& fileName, const Maze& maze, const Chromo& chromo)
+{
+    FILE * f = fopen(fileName.c_str(), "wt");
+    if(f)
+    {
+        for(size_t q = 1; q < maxHeight - 1; ++q)
+        {
+            for(size_t w = 1; w < maxWidth - 1; ++w)
+            {
+                if(chromo[(q - 1) * width + w - 1]) fprintf(f, "%6s ", "#");
+                //if(maze[q * maxWidth + w] == wall) fprintf(f, "%6s ", "#");
+                else fprintf(f, "%6zd ", maze[q * maxWidth + w]);
+            }
+
+            fprintf(f, "\n");
+        }
+
+        fclose(f);
+    }
+}
+
+
 Score runGame(const Chromo& chromo, bool isSaveMazeWithWeights = false)
 {
     Maze maze;
@@ -104,7 +126,7 @@ Score runGame(const Chromo& chromo, bool isSaveMazeWithWeights = false)
 
     if(isSaveMazeWithWeights)
     {
-        saveMazeWithWeights("w.txt", maze);
+        saveMazeWithWeights("w.txt", maze, chromo);
     }
 
     return reward;
