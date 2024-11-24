@@ -45,12 +45,12 @@ enum SelectionAlgo
     AlgoRoulette,
     AlgoTournament
 };
-//SelectionAlgo SelAlgo = SelectionAlgo::AlgoRoulette;
-SelectionAlgo SelAlgo = SelectionAlgo::AlgoTournament;
+SelectionAlgo SelAlgo = SelectionAlgo::AlgoRoulette;
+//SelectionAlgo SelAlgo = SelectionAlgo::AlgoTournament;
 //size_t tournamentSize = 3;
 size_t tournamentSize = 10;
-//float selectionProbability = 0.85f;
-float selectionProbability = 0.5f;
+float selectionProbability = 0.85f;
+//float selectionProbability = 0.5f;
 
 //diff evolution
 const float CR = 0.5f;
@@ -65,11 +65,11 @@ const size_t threadsAmount = 10;
 #define NEW_TOURNAMENT
 #define STAT
 #if !defined(BUGGED)
-size_t refreshEvery = 0xFFFFFFFF;
+size_t refreshEvery = 3000;
 #else
 size_t refreshEvery = 0xFFFFFFFF;
 #endif
-size_t redefineSeedIfNoChangeEvery = 0xFFFFFFFF;
+size_t redefineSeedIfNoChangeEvery = 3000;
 
 
 const double pi = std::acos(-1);
@@ -221,7 +221,7 @@ void geneticSearch(Population& pop)
 #endif
 #endif
 
-        if(epoch % refreshEvery == 0)//refresh
+        if(epoch % refreshEvery == 0 && !resultUpdated)//refresh
         {
             printf("Refresh population with best chromo\n");
             for(size_t q = 0; q < populationSizeAndElite; ++q)
@@ -230,7 +230,7 @@ void geneticSearch(Population& pop)
             }
         }
 
-        if(epoch % redefineSeedIfNoChangeEvery == 0)
+        if(epoch % redefineSeedIfNoChangeEvery == 0 && !resultUpdated)
         //if(epochsWithoutUpdate >= redefineSeedIfNoChangeEvery)
         {
             epochsWithoutUpdate = 0;
@@ -247,7 +247,6 @@ void geneticSearch(Population& pop)
         ++epochsWithoutUpdate;
         if(bestReward > totalBestReward)
         {
-            resultUpdated = true;
             bestTotal = best;
             totalBestReward = bestReward;
             epochsWithoutUpdate = 0;
@@ -261,6 +260,8 @@ void geneticSearch(Population& pop)
 
             if(epoch != 1)
             {
+                resultUpdated = true;
+
                 FILE * f = fopen("mr.txt", "at");
                 if(f)
                 {
