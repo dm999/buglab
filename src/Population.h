@@ -136,12 +136,29 @@ Score runGame(const Chromo& chromo, bool isSaveMazeWithWeights = false, bool isR
 
         mazeFromChromo(chromo, mazeStep);
 
+//#define SHOW_DIFF
+
         MazeState state;
         do{
             reward = state.n;
+#if defined(SHOW_DIFF)
+            Maze mazeStepBefore = mazeStep;
+#endif
             runMazeStepByStep(mazeStep, state, 1000000);
             std::string fName = "w_" + std::to_string(state.n) + ".txt";
+#if !defined(SHOW_DIFF)
             saveMazeWithWeights(fName.c_str(), mazeStep, chromo);
+#else
+            if(reward != state.n)
+            {
+                Maze mazeDiff = mazeStep;
+                for(size_t q = 0; q < maxWidth * maxHeight; ++q)
+                {
+                    mazeDiff[q] -= mazeStepBefore[q];
+                }
+                saveMazeWithWeights(fName.c_str(), mazeDiff, chromo);
+            }
+#endif
         }while(reward != state.n);
 
 
