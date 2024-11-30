@@ -179,6 +179,85 @@ bool runMaze(Maze& maze, Score& reward)
     return true;
 }
 
+struct MazeState{
+    int kx = 1, ky = 1;
+    Score n = 0;
+    int dir = 0;
+    int kx2, ky2;
+    MazeData down, right, up, left, cur;
+};
+
+void runMazeStepByStep(Maze& maze, MazeState& state, const Score maxStepDiff)
+{
+    MazeState st = state;
+
+    while(1)
+    {
+        if((st.n - state.n) >= maxStepDiff)
+        {
+            state = st;
+            return;
+        }
+
+        if((st.kx == width) && (st.ky == height))
+        {
+            state = st;
+            return;
+        }
+        else
+        {
+            st.kx2 = st.kx;
+            st.ky2 = st.ky;
+
+            st.n++;
+
+            st.down = maze[(st.ky + 1) * maxWidth + st.kx];
+            st.right = maze[(st.ky + 0) * maxWidth + st.kx + 1];
+            st.up = maze[(st.ky - 1) * maxWidth + st.kx];
+            st.left = maze[(st.ky + 0) * maxWidth + st.kx - 1];
+
+            if(st.dir == 0) st.cur = st.down;
+            if(st.dir == 1) st.cur = st.right;
+            if(st.dir == 2) st.cur = st.up;
+            if(st.dir == 3) st.cur = st.left;
+
+            if((st.cur <= st.down) && (st.cur <= st.right) && (st.cur <= st.up) && (st.cur <= st.left))
+            {
+                if(st.dir == 0) st.ky2++;
+                if(st.dir == 1) st.kx2++;
+                if(st.dir == 2) st.ky2--;
+                if(st.dir == 3) st.kx2--;
+            }
+            else if((st.down <= st.right) && (st.down <= st.up) && (st.down <= st.left))
+            {
+                st.ky2++;
+                st.dir = 0;
+            }
+            else if((st.right <= st.down) && (st.right <= st.up) && (st.right <= st.left))
+            {
+                st.kx2++;
+                st.dir = 1;
+            }
+            else if((st.up <= st.right) && (st.up <= st.down) && (st.up <= st.left))
+            {
+                st.ky2--;
+                st.dir = 2;
+            }
+            else if((st.left <= st.right) && (st.left <= st.down) && (st.left <= st.up))
+            {
+                st.kx2--;
+                st.dir = 3;
+            }
+
+            maze[st.ky * maxWidth + st.kx]++;
+            st.kx = st.kx2;
+            st.ky = st.ky2;
+        }
+    }
+
+    return;
+}
+
 std::string printRewardFriendly(Score reward)
 {
     std::string out = std::to_string(reward);

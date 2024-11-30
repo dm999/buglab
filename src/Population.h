@@ -114,7 +114,7 @@ void saveMazeWithWeights(const std::string& fileName, const Maze& maze, const Ch
 }
 
 
-Score runGame(const Chromo& chromo, bool isSaveMazeWithWeights = false)
+Score runGame(const Chromo& chromo, bool isSaveMazeWithWeights = false, bool isRunStepByStep = false)
 {
     Maze maze;
     initMaze(maze);
@@ -127,6 +127,24 @@ Score runGame(const Chromo& chromo, bool isSaveMazeWithWeights = false)
     if(isSaveMazeWithWeights)
     {
         saveMazeWithWeights("w.txt", maze, chromo);
+    }
+
+    if(isRunStepByStep)
+    {
+        Maze mazeStep;
+        initMaze(mazeStep);
+
+        mazeFromChromo(chromo, mazeStep);
+
+        MazeState state;
+        do{
+            reward = state.n;
+            runMazeStepByStep(mazeStep, state, 1000000);
+            std::string fName = "w_" + std::to_string(state.n) + ".txt";
+            saveMazeWithWeights(fName.c_str(), mazeStep, chromo);
+        }while(reward != state.n);
+
+
     }
 
     return reward;

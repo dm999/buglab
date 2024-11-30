@@ -14,6 +14,7 @@
 //run only single game
 //#define RUN_SINGLE_GAME_ONLY
 //#define SAVE_HEATMAP
+//#define RUN_STEP_BY_STEP
 
 //genetics
 const size_t populationSize = 1000;
@@ -542,7 +543,11 @@ int main()
 #if !defined(SAVE_HEATMAP)
     Score reward = runGame(pop[0].val);
 #else
+#if !defined(RUN_STEP_BY_STEP)
     Score reward = runGame(pop[0].val, true);
+#else
+    Score reward = runGame(pop[0].val, false, true);
+#endif
 #endif
     long long timeTaken = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
     float ms = static_cast<float>(timeTaken) / 1000.0f / 1000.0f;
