@@ -15,11 +15,7 @@ const MazeData externalWall = 0xFFFFFFFFFFFFFFFF;
 typedef std::array<MazeData, maxWidth * maxHeight> Maze;
 typedef uint64_t Score;
 
-#if defined(BUGGED)
-const char* State = "map_bug.txt";
-#else
 const char* State = "map.txt";
-#endif
 
 void initMaze(Maze& maze)
 {
@@ -75,9 +71,7 @@ void printMaze(const Maze& maze)
 
 bool isExitExists(const Maze& maze)
 {
-#if !defined(BUGGED)
     if(maze[1 * maxWidth + 1] != 0) return false;//comment this line to get >2B score
-#endif
     if(maze[height * maxWidth + width] != 0) return false;
 
     Maze visited(maze);

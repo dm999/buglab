@@ -11,21 +11,13 @@
 #include <iostream>
 #include <utility>
 
-//bugged?
-//#define BUGGED
-
 //run only single game
 //#define RUN_SINGLE_GAME_ONLY
 //#define SAVE_HEATMAP
 
 //genetics
-#if !defined(BUGGED)
 const size_t populationSize = 1000;
 const size_t elite = 2;
-#else
-const size_t populationSize = 10;
-const size_t elite = 50;
-#endif
 const size_t populationSizeAndElite = populationSize + elite;
 const float crossoverRate = 1.0f;
 float mutationRate = 0.002f;
@@ -64,11 +56,7 @@ const size_t threadsAmount = 10;
 #define VARIABLE_MUTATION_RATE
 #define NEW_TOURNAMENT
 #define STAT
-#if !defined(BUGGED)
 size_t refreshEvery = 3000;
-#else
-size_t refreshEvery = 0xFFFFFFFF;
-#endif
 size_t redefineSeedIfNoChangeEvery = 3000;
 
 
