@@ -1,7 +1,7 @@
 import seaborn
 import matplotlib.pyplot as plt
 
-dir = "../2_diff/"
+dir = "../5_diff/"
 
 def createPlot(filename):
     file = open(dir + 'w_' + filename + '.txt', mode = 'r')
@@ -28,8 +28,8 @@ def createPlot(filename):
     fig.savefig(dir + filename + '.jpg')
     plt.close()
 
-createPlot("9147780")
+createPlot("012917268")
 
-#~ for i in range (100000, 9200000, 100000):
-    #~ filename = str(i).zfill(7)
-    #~ createPlot(filename)
+for i in range (1000000, 13000000, 1000000):
+    filename = str(i).zfill(9)
+    createPlot(filename)
