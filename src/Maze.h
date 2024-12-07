@@ -112,73 +112,82 @@ bool runMaze(Maze& maze, Score& reward)
 
     if(!isExitExists(maze)) return false;
 
-    int kx = 1, ky = 1;
+    uint8_t kx = 1, ky = 1;
     Score n = 0;
-    int dir = 0;
-    MazeData down, right, up, left, nextVal;
+    uint8_t dir = 0;
+
+    const int8_t diff[4 * 2] = { 0, 1, 1, 0, 0, -1, -1, 0};
+
+    std::array<MazeData, 4> cross;
 
     while(1)
     {
-        if((kx == width) && (ky == height))
+        n++;
+
+        cross[0] = maze[(ky + 1) * maxWidth + kx + 0];
+        cross[1] = maze[(ky + 0) * maxWidth + kx + 1];
+        cross[2] = maze[(ky - 1) * maxWidth + kx + 0];
+        cross[3] = maze[(ky + 0) * maxWidth + kx - 1];
+
+        maze[ky * maxWidth + kx]++;
+
+        //inertia
+        if((cross[dir] <= cross[0]) && (cross[dir] <= cross[1]) && (cross[dir] <= cross[2]) && (cross[dir] <= cross[3]))
         {
-            reward = n;
-            return true;
+            kx += diff[dir * 2 + 0];
+            ky += diff[dir * 2 + 1];
+
+            if((kx == width) && (ky == height))
+            {
+                reward = n;
+                return true;
+            }
+
+            continue;
         }
-        else
+
+        //down
+        if((cross[0] <= cross[1]) && (cross[0] <= cross[2]) && (cross[0] <= cross[3]))
         {
-            n++;
+            ky++;
+            dir = 0;
 
-            down    = maze[(ky + 1) * maxWidth + kx + 0];
-            right   = maze[(ky + 0) * maxWidth + kx + 1];
-            up      = maze[(ky - 1) * maxWidth + kx + 0];
-            left    = maze[(ky + 0) * maxWidth + kx - 1];
-
-            maze[ky * maxWidth + kx]++;
-
-            nextVal = down;
-            if(dir == 1) nextVal = right;
-            if(dir == 2) nextVal = up;
-            if(dir == 3) nextVal = left;
-
-            //inertia
-            if((nextVal <= down) && (nextVal <= right) && (nextVal <= up) && (nextVal <= left))
+            if((kx == width) && (ky == height))
             {
-                if(dir == 0) ky++;
-                if(dir == 1) kx++;
-                if(dir == 2) ky--;
-                if(dir == 3) kx--;
-                continue;
+                reward = n;
+                return true;
             }
 
-            //down
-            if((down <= right) && (down <= up) && (down <= left))
+            continue;
+        }
+
+        //right
+        if((cross[1] <= cross[0]) && (cross[1] <= cross[2]) && (cross[1] <= cross[3]))
+        {
+            kx++;
+            dir = 1;
+
+            if((kx == width) && (ky == height))
             {
-                ky++;
-                dir = 0;
-                continue;
+                reward = n;
+                return true;
             }
 
-            //right
-            if((right <= down) && (right <= up) && (right <= left))
-            {
-                kx++;
-                dir = 1;
-                continue;
-            }
+            continue;
+        }
 
-            //up
-            if((up <= right) && (up <= down) && (up <= left))
-            {
-                ky--;
-                dir = 2;
-                continue;
-            }
+        //up
+        if((cross[2] <= cross[1]) && (cross[2] <= cross[0]) && (cross[2] <= cross[3]))
+        {
+            ky--;
+            dir = 2;
+            continue;
+        }
             
-            //left
-            {
-                kx--;
-                dir = 3;
-            }
+        //left
+        {
+            kx--;
+            dir = 3;
         }
     }
 
