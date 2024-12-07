@@ -115,8 +115,7 @@ bool runMaze(Maze& maze, Score& reward)
     int kx = 1, ky = 1;
     Score n = 0;
     int dir = 0;
-    int kx2, ky2;
-    MazeData down, right, up, left, cur;
+    MazeData down, right, up, left, nextVal;
 
     while(1)
     {
@@ -127,52 +126,59 @@ bool runMaze(Maze& maze, Score& reward)
         }
         else
         {
-            kx2 = kx;
-            ky2 = ky;
-
             n++;
 
-            down = maze[(ky + 1) * maxWidth + kx];
-            right = maze[(ky + 0) * maxWidth + kx + 1];
-            up = maze[(ky - 1) * maxWidth + kx];
-            left = maze[(ky + 0) * maxWidth + kx - 1];
-
-            if(dir == 0) cur = down;
-            if(dir == 1) cur = right;
-            if(dir == 2) cur = up;
-            if(dir == 3) cur = left;
-
-            if((cur <= down) && (cur <= right) && (cur <= up) && (cur <= left))
-            {
-                if(dir == 0) ky2++;
-                if(dir == 1) kx2++;
-                if(dir == 2) ky2--;
-                if(dir == 3) kx2--;
-            }
-            else if((down <= right) && (down <= up) && (down <= left))
-            {
-                ky2++;
-                dir = 0;
-            }
-            else if((right <= down) && (right <= up) && (right <= left))
-            {
-                kx2++;
-                dir = 1;
-            }
-            else if((up <= right) && (up <= down) && (up <= left))
-            {
-                ky2--;
-                dir = 2;
-            }
-            else if((left <= right) && (left <= down) && (left <= up))
-            {
-                kx2--;
-                dir = 3;
-            }
+            down    = maze[(ky + 1) * maxWidth + kx + 0];
+            right   = maze[(ky + 0) * maxWidth + kx + 1];
+            up      = maze[(ky - 1) * maxWidth + kx + 0];
+            left    = maze[(ky + 0) * maxWidth + kx - 1];
 
             maze[ky * maxWidth + kx]++;
-            kx = kx2;
-            ky = ky2;
+
+            nextVal = down;
+            if(dir == 1) nextVal = right;
+            if(dir == 2) nextVal = up;
+            if(dir == 3) nextVal = left;
+
+            //inertia
+            if((nextVal <= down) && (nextVal <= right) && (nextVal <= up) && (nextVal <= left))
+            {
+                if(dir == 0) ky++;
+                if(dir == 1) kx++;
+                if(dir == 2) ky--;
+                if(dir == 3) kx--;
+                continue;
+            }
+
+            //down
+            if((down <= right) && (down <= up) && (down <= left))
+            {
+                ky++;
+                dir = 0;
+                continue;
+            }
+
+            //right
+            if((right <= down) && (right <= up) && (right <= left))
+            {
+                kx++;
+                dir = 1;
+                continue;
+            }
+
+            //up
+            if((up <= right) && (up <= down) && (up <= left))
+            {
+                ky--;
+                dir = 2;
+                continue;
+            }
+            
+            //left
+            {
+                kx--;
+                dir = 3;
+            }
         }
     }
 
@@ -183,8 +189,7 @@ struct MazeState{
     int kx = 1, ky = 1;
     Score n = 0;
     int dir = 0;
-    int kx2, ky2;
-    MazeData down, right, up, left, cur;
+    MazeData down, right, up, left, nextVal;
 };
 
 void runMazeStepByStep(Maze& maze, MazeState& state, const Score maxStepDiff)
@@ -206,52 +211,48 @@ void runMazeStepByStep(Maze& maze, MazeState& state, const Score maxStepDiff)
         }
         else
         {
-            st.kx2 = st.kx;
-            st.ky2 = st.ky;
-
             st.n++;
 
-            st.down = maze[(st.ky + 1) * maxWidth + st.kx];
-            st.right = maze[(st.ky + 0) * maxWidth + st.kx + 1];
-            st.up = maze[(st.ky - 1) * maxWidth + st.kx];
-            st.left = maze[(st.ky + 0) * maxWidth + st.kx - 1];
+            st.down     = maze[(st.ky + 1) * maxWidth + st.kx + 0];
+            st.right    = maze[(st.ky + 0) * maxWidth + st.kx + 1];
+            st.up       = maze[(st.ky - 1) * maxWidth + st.kx + 0];
+            st.left     = maze[(st.ky + 0) * maxWidth + st.kx - 1];
 
-            if(st.dir == 0) st.cur = st.down;
-            if(st.dir == 1) st.cur = st.right;
-            if(st.dir == 2) st.cur = st.up;
-            if(st.dir == 3) st.cur = st.left;
+            maze[st.ky * maxWidth + st.kx]++;
 
-            if((st.cur <= st.down) && (st.cur <= st.right) && (st.cur <= st.up) && (st.cur <= st.left))
+            if(st.dir == 0) st.nextVal = st.down;
+            if(st.dir == 1) st.nextVal = st.right;
+            if(st.dir == 2) st.nextVal = st.up;
+            if(st.dir == 3) st.nextVal = st.left;
+
+            if((st.nextVal <= st.down) && (st.nextVal <= st.right) && (st.nextVal <= st.up) && (st.nextVal <= st.left))
             {
-                if(st.dir == 0) st.ky2++;
-                if(st.dir == 1) st.kx2++;
-                if(st.dir == 2) st.ky2--;
-                if(st.dir == 3) st.kx2--;
+                if(st.dir == 0) st.ky++;
+                if(st.dir == 1) st.kx++;
+                if(st.dir == 2) st.ky--;
+                if(st.dir == 3) st.kx--;
             }
             else if((st.down <= st.right) && (st.down <= st.up) && (st.down <= st.left))
             {
-                st.ky2++;
+                st.ky++;
                 st.dir = 0;
             }
             else if((st.right <= st.down) && (st.right <= st.up) && (st.right <= st.left))
             {
-                st.kx2++;
+                st.kx++;
                 st.dir = 1;
             }
             else if((st.up <= st.right) && (st.up <= st.down) && (st.up <= st.left))
             {
-                st.ky2--;
+                st.ky--;
                 st.dir = 2;
             }
             else if((st.left <= st.right) && (st.left <= st.down) && (st.left <= st.up))
             {
-                st.kx2--;
+                st.kx--;
                 st.dir = 3;
             }
 
-            maze[st.ky * maxWidth + st.kx]++;
-            st.kx = st.kx2;
-            st.ky = st.ky2;
         }
     }
 
