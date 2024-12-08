@@ -47,10 +47,6 @@ size_t tournamentSize = 10;
 float selectionProbability = 0.85f;
 //float selectionProbability = 0.5f;
 
-//diff evolution
-const float CR = 0.5f;
-const float F = 0.5f;
-
 //parallel
 #define PROCESS_THREADS
 const size_t threadsAmount = 10;
@@ -354,109 +350,6 @@ void geneticSearch(Population& pop)
 
 }
 
-//https://en.wikipedia.org/wiki/Differential_evolution
-void diffEvolutionSearch(Population& pop)
-{
-    size_t epoch = 1;
-
-    Score totalBestReward = 0;
-
-    {
-        Chromo best;
-        size_t bestIndex;
-        Score bestReward = assignFitness(pop, best, bestIndex);
-        if(bestReward > totalBestReward)
-        {
-            totalBestReward = bestReward;
-        }
-    }
-
-    while(1)
-    {
-        printf("Epoch: %5zd ", epoch);
-
-        std::uniform_int_distribution<> iDist(0, populationSize - 1);
-        std::uniform_real_distribution rDist(0.0f, 1.0f);
-
-        Score bestReward = 0;
-
-        std::chrono::steady_clock::time_point timeStart = std::chrono::steady_clock::now();
-
-        for(size_t q = 0; q < populationSize; ++q)
-        {
-            size_t indexA = iDist(gen), indexB = iDist(gen), indexC = iDist(gen);
-
-            while(indexA == q) indexA = iDist(gen);
-            while(indexB == q || indexB == indexA) indexB = iDist(gen);
-            while(indexC == q || indexC == indexA || indexC == indexB) indexC = iDist(gen);
-
-            size_t R = static_cast<size_t>(rDist(gen) * width * height) - 1;
-
-            Chromo newElem;
-            newElem = pop[q].val;
-
-            //https://arxiv.org/pdf/1812.03513
-            for(size_t w = 0; w < newElem.size(); ++w)
-            {
-                float r = rDist(gen);
-                float f = rDist(gen);
-
-                if(pop[indexB].val[w] != pop[indexC].val[w] && f < F)
-                {
-                    newElem[w] = !pop[indexA].val[w];
-                }
-                else
-                {
-                    newElem[w] = pop[indexA].val[w];
-                }
-
-                if(r > CR || w == R)
-                {
-                    newElem[w] = pop[q].val[w];
-                }
-
-                //if(r < CR || w == R)
-                //{
-                    //newElem[w] = static_cast<bool>((static_cast<float>(pop[indexA].val[w]) + F * (static_cast<float>(pop[indexB].val[w]) - static_cast<float>(pop[indexC].val[w]))) + 0.5f);
-                //}
-            }
-
-            Score reward = runGame(newElem);
-
-            if(reward > bestReward)
-            {
-                bestReward = reward;
-            }
-
-            if(reward >= pop[q].fitness)
-            {
-                pop[q].fitness = reward;
-                pop[q].val = newElem;
-
-                if(reward > totalBestReward)
-                {
-                    totalBestReward = reward;
-
-                    {
-                        Maze maze;
-                        initMaze(maze);
-                        mazeFromChromo(pop[q].val, maze);
-                        saveMaze(maze);
-                    }
-                }
-            }
-        }
-
-        long long timeTaken = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-        float ms = static_cast<float>(timeTaken) / 1000.0f / 1000.0f;
-
-        std::cout << "reward: " << totalBestReward << " (" << printRewardFriendly(totalBestReward) << ")" << "  reward iter: " << bestReward << " ";
-        printf("epoch time = %5.1f\n", ms);
-
-        ++epoch;
-    }
-}
-
 int main()
 {
     if(sizeof(size_t) < 8)
@@ -488,7 +381,6 @@ int main()
 #endif
 
     geneticSearch(pop);
-    //diffEvolutionSearch(pop);
 #else
 
     Population pop;
