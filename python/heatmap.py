@@ -1,7 +1,7 @@
 import seaborn
 import matplotlib.pyplot as plt
 
-dir = "../1/"
+dir = "../1_diff/"
 
 def createPlot(filename):
     file = open(dir + 'w_' + filename + '.txt', mode = 'r')
