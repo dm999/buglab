@@ -286,10 +286,10 @@ void geneticSearch(Population& pop)
 #if defined(STAT)
         Population pop2(pop);
         std::sort(pop2.begin(), pop2.end(), [](const PopElement& elemA, const PopElement& elemB){ return elemA.fitness < elemB.fitness; });
-        printf("reward: %10s  iter best: %10s  middle: %10s  %zu: %10s  mr: %.4f ", printRewardFriendly(totalBestReward).c_str(), printRewardFriendly(bestReward).c_str(), printRewardFriendly(pop2[populationSize / 2].fitness).c_str(), 100 / reshape, printRewardFriendly(pop2[100 / reshape].fitness).c_str(), mutationRate);
+        printf("reward: %11s  iter best: %11s  middle: %11s  %zu: %11s  mr: %.4f ", printRewardFriendly(totalBestReward).c_str(), printRewardFriendly(bestReward).c_str(), printRewardFriendly(pop2[populationSize / 2].fitness).c_str(), 100 / reshape, printRewardFriendly(pop2[100 / reshape].fitness).c_str(), mutationRate);
 #else
         //printf("total best reward: %zu best reward: %zu ", totalBestReward, bestReward);
-        printf("reward: %10s iter best: %10s ", printRewardFriendly(totalBestReward).c_str(), printRewardFriendly(bestReward).c_str());
+        printf("reward: %11s iter best: %11s ", printRewardFriendly(totalBestReward).c_str(), printRewardFriendly(bestReward).c_str());
         //std::cout << "reward: " << printRewardFriendly(totalBestReward) << "  reward iter: " << printRewardFriendly(bestReward) << " ";
 #endif
 

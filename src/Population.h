@@ -137,6 +137,7 @@ Score runGame(const Chromo& chromo, bool isSaveMazeWithWeights = false, bool isR
         mazeFromChromo(chromo, mazeStep);
 
 //#define SHOW_DIFF
+#define STEP_FOLDER_NAME "1"
 
         MazeState state;
 #if 0
@@ -162,10 +163,11 @@ Score runGame(const Chromo& chromo, bool isSaveMazeWithWeights = false, bool isR
             //runMazeStepByStep(mazeStep, state, 1000);
             char buf[1000];
             sprintf(buf, "%09zu", state.n);
-            std::string fName = "./1/w_" + std::string(buf) + ".txt";
 #if !defined(SHOW_DIFF)
+            std::string fName = "./" STEP_FOLDER_NAME "/w_" + std::string(buf) + ".txt";
             saveMazeWithWeights(fName.c_str(), mazeStep, chromo);
 #else
+            std::string fName = "./" STEP_FOLDER_NAME "_diff/w_" + std::string(buf) + ".txt";
             if(reward != state.n)
             {
                 Maze mazeDiff = mazeStep;
