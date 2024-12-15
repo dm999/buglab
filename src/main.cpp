@@ -20,6 +20,7 @@
 const size_t reshape = 1;
 //const size_t reshape = 5;
 const size_t populationSize = 1000 / reshape;
+//const size_t populationSize = 100000;
 const size_t elite = 2;
 const size_t populationSizeAndElite = populationSize + elite;
 const float crossoverRate = 1.0f;
@@ -360,19 +361,20 @@ bool addOne(std::vector<bool>& pattern)
     //https://en.wikipedia.org/wiki/Adder_%28electronics%29#Full_adder
     //https://stackoverflow.com/questions/13282825/adding-binary-numbers-in-c
 
-    std::vector<bool> b(pattern.size(), false);
-    std::vector<bool> sum(pattern.size(), false);
-    b[0] = true;
+    bool c;// carry
 
-    bool c = false;
+    bool sum;
 
-    for(size_t i = 0; i < pattern.size(); i++)
+    sum = !pattern[0];
+    c = pattern[0];
+    pattern[0] = sum;
+
+    for(size_t i = 1; i < pattern.size(); i++)
     {
-        sum[i] = ((pattern[i] ^ b[i]) ^ c); // c is carry
-        c = ((pattern[i] & b[i]) | (pattern[i] & c)) | (b[i] & c);
+        sum = (pattern[i] ^ c);
+        c &= pattern[i];
+        pattern[i] = sum;
     }
-
-    std::copy(sum.begin(), sum.end(), pattern.begin());
 
     return false;
 }
