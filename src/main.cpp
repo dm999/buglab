@@ -402,7 +402,13 @@ void maskedBrutualForce(Population& pop)
         std::chrono::steady_clock::time_point timeStart = std::chrono::steady_clock::now();
 
         Chromo best;
-        Score bestReward = assignFitness(pop, best, bestIndex);
+        Score bestReward = 0;
+        if(epoch == 1)
+        {
+            bestReward = runGame(pop[0].val);
+            best = pop[0].val;
+        }
+        else bestReward = assignFitness(pop, best, bestIndex);
 
         if(bestReward > totalBestReward)
         {
@@ -497,6 +503,7 @@ int main()
 #endif
 
 #if defined(MASKED_BRUTUAL)
+    printf("Masked brutual search: %zu\n", std::count(mask.begin(), mask.end(), true));
     maskedBrutualForce(pop);
 #else
     geneticSearch(pop);
