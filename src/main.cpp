@@ -58,6 +58,9 @@ const size_t threadsAmount = 10;
 size_t refreshEvery = 3000 * reshape;
 size_t redefineSeedIfNoChangeEvery = 3000 * reshape;
 
+//brutual search
+//#define MASKED_BRUTUAL
+
 
 const double pi = std::acos(-1);
 
@@ -350,6 +353,117 @@ void geneticSearch(Population& pop)
 
 }
 
+bool addOne(std::vector<bool>& pattern)
+{
+    if(std::count(pattern.begin(), pattern.end(), true) == pattern.size()) return true;
+
+    //https://en.wikipedia.org/wiki/Adder_%28electronics%29#Full_adder
+    //https://stackoverflow.com/questions/13282825/adding-binary-numbers-in-c
+
+    std::vector<bool> b(pattern.size(), false);
+    std::vector<bool> sum(pattern.size(), false);
+    b[0] = true;
+
+    bool c = false;
+
+    for(size_t i = 0; i < pattern.size(); i++)
+    {
+        sum[i] = ((pattern[i] ^ b[i]) ^ c); // c is carry
+        c = ((pattern[i] & b[i]) | (pattern[i] & c)) | (b[i] & c);
+    }
+
+    std::copy(sum.begin(), sum.end(), pattern.begin());
+
+    return false;
+}
+
+void maskedBrutualForce(Population& pop)
+{
+    size_t countBits = std::count(mask.begin(), mask.end(), true);
+
+    Chromo bestTotal;
+    Score totalBestReward = 0;
+    size_t bestIndex;
+
+    size_t epoch = 1;
+
+    bool sequenceFinished = false;
+
+    std::vector<bool> pattern(countBits, false);
+
+    float wholeSize = std::pow(2, countBits);
+
+    while(1)
+    {
+        printf("Epoch: %5zd %.3f ", epoch, static_cast<float>((epoch - 1) * populationSize) / wholeSize);
+
+        std::chrono::steady_clock::time_point timeStart = std::chrono::steady_clock::now();
+
+        Chromo best;
+        Score bestReward = assignFitness(pop, best, bestIndex);
+
+        if(bestReward > totalBestReward)
+        {
+            bestTotal = best;
+            totalBestReward = bestReward;
+
+            {
+                Maze maze;
+                initMaze(maze);
+                mazeFromChromo(bestTotal, maze);
+                saveMaze(maze);
+            }
+
+            if(epoch != 1)
+            {
+
+                FILE * f = fopen("mr.txt", "at");
+                if(f)
+                {
+                    fprintf(f, "%zu %f\n", totalBestReward, mutationRate);
+                    fclose(f);
+                }
+            }
+        }
+
+        if(sequenceFinished) break;
+
+#if defined(STAT)
+        Population pop2(pop);
+        std::sort(pop2.begin(), pop2.end(), [](const PopElement& elemA, const PopElement& elemB){ return elemA.fitness < elemB.fitness; });
+        printf("reward: %11s  iter best: %11s  middle: %11s  %zu: %11s  mr: %.4f ", printRewardFriendly(totalBestReward).c_str(), printRewardFriendly(bestReward).c_str(), printRewardFriendly(pop2[populationSize / 2].fitness).c_str(), 100 / reshape, printRewardFriendly(pop2[100 / reshape].fitness).c_str(), mutationRate);
+#else
+        //printf("total best reward: %zu best reward: %zu ", totalBestReward, bestReward);
+        printf("reward: %11s iter best: %11s ", printRewardFriendly(totalBestReward).c_str(), printRewardFriendly(bestReward).c_str());
+        //std::cout << "reward: " << printRewardFriendly(totalBestReward) << "  reward iter: " << printRewardFriendly(bestReward) << " ";
+#endif
+
+        for(size_t q = 0; q < populationSize; ++q)
+        {
+            sequenceFinished = addOne(pattern);
+
+            if(sequenceFinished) break;
+
+            size_t patternIndex = 0;
+
+            for(size_t w = 0; w < pop[q].val.size(); ++w)
+            {
+                if(mask[w])
+                {
+                    pop[q].val[w] = pattern[patternIndex++];
+                }
+            }
+        }
+
+        long long timeTaken = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
+        float ms = static_cast<float>(timeTaken) / 1000.0f / 1000.0f;
+
+        printf("epoch time = %5.1fs\n", ms);
+
+        ++epoch;
+    }
+}
+
 int main()
 {
     if(sizeof(size_t) < 8)
@@ -380,7 +494,11 @@ int main()
     }
 #endif
 
+#if defined(MASKED_BRUTUAL)
+    maskedBrutualForce(pop);
+#else
     geneticSearch(pop);
+#endif
 #else
 
     Population pop;
