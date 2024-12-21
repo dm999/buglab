@@ -13,7 +13,7 @@
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
 #pragma resource "*.dfm"
-TForm1 *Form1;
+TBUIForm *BUIForm;
 
 
 const size_t PaddingTop = 33;
@@ -234,12 +234,12 @@ Score score = 0;
 
 bool buttonClicked = false;
 //---------------------------------------------------------------------------
-__fastcall TForm1::TForm1(TComponent* Owner)
+__fastcall TBUIForm::TBUIForm(TComponent* Owner)
     : TForm(Owner)
 {
     mBMP = new Graphics::TBitmap();
-    mBMP->Width = Form1->Width;
-    mBMP->Height = Form1->Height;
+    mBMP->Width = BUIForm->Width;
+    mBMP->Height = BUIForm->Height;
 
     initMaze(maze);
     //loadState(maze);
@@ -250,12 +250,12 @@ __fastcall TForm1::TForm1(TComponent* Owner)
     //runMaze(tmp, score);
 }
 //---------------------------------------------------------------------------
-void __fastcall TForm1::ExitExecute(TObject *Sender)
+void __fastcall TBUIForm::ExitExecute(TObject *Sender)
 {
     Close();
 }
 //---------------------------------------------------------------------------
-void TForm1::Pnt()
+void TBUIForm::Pnt()
 {
     mBMP->Canvas->Brush->Color = clBlack;
     mBMP->Canvas->Pen->Color = clRed;
@@ -346,23 +346,23 @@ void TForm1::Pnt()
         }
     }
 
-    mBMP->Canvas->TextOutA(10, Form1->Height - 20, "Score: " + AnsiString(printRewardFriendly(score).c_str()));
+    mBMP->Canvas->TextOutA(10, BUIForm->Height - 20, "Score: " + AnsiString(printRewardFriendly(score).c_str()));
 }
 
-void TForm1::Blt()
+void TBUIForm::Blt()
 {
-     Form1->Canvas->CopyRect(TRect(0,0,Form1->Width,Form1->Height),mBMP->Canvas,TRect(0,0,Form1->Width,Form1->Height));
+     BUIForm->Canvas->CopyRect(TRect(0,0,BUIForm->Width,BUIForm->Height),mBMP->Canvas,TRect(0,0,BUIForm->Width,BUIForm->Height));
 }
 
 //---------------------------------------------------------------------------
-void __fastcall TForm1::FormPaint(TObject *Sender)
+void __fastcall TBUIForm::FormPaint(TObject *Sender)
 {
     Pnt();
     Blt();
 }
 //---------------------------------------------------------------------------
 
-void __fastcall TForm1::RecalcExecute(TObject *Sender)
+void __fastcall TBUIForm::RecalcExecute(TObject *Sender)
 {
     score = 0;
     Pnt();
@@ -373,17 +373,20 @@ void __fastcall TForm1::RecalcExecute(TObject *Sender)
     Blt();
 }
 //---------------------------------------------------------------------------
-void __fastcall TForm1::LoadExecute(TObject *Sender)
+void __fastcall TBUIForm::LoadExecute(TObject *Sender)
 {
-    //loadState(maze, "d:/Mj/GitWC/Buglab/ui/map.txt");
-    //mazeW = maze;
-    //score = 0;
-    //Pnt();
-    //Blt();
+    if(OpenDialog1->FileName != "")
+    {
+        loadState(maze, OpenDialog1->FileName.t_str());
+        mazeW = maze;
+        score = 0;
+        Pnt();
+        Blt();
+    }
 }
 //---------------------------------------------------------------------------
 
-void __fastcall TForm1::OpenExecute(TObject *Sender)
+void __fastcall TBUIForm::OpenExecute(TObject *Sender)
 {
     //if(OpenDialog1->InitialDir == "") OpenDialog1->InitialDir = GetCurrentDir();
     if(OpenDialog1->Execute())
@@ -396,7 +399,7 @@ void __fastcall TForm1::OpenExecute(TObject *Sender)
     }
 }
 //---------------------------------------------------------------------------
-void __fastcall TForm1::FormMouseUp(TObject *Sender, TMouseButton Button, TShiftState Shift,
+void __fastcall TBUIForm::FormMouseUp(TObject *Sender, TMouseButton Button, TShiftState Shift,
           int X, int Y)
 {
     if(Button == mbLeft && buttonClicked)
@@ -425,7 +428,7 @@ void __fastcall TForm1::FormMouseUp(TObject *Sender, TMouseButton Button, TShift
 }
 //---------------------------------------------------------------------------
 
-void __fastcall TForm1::FormMouseDown(TObject *Sender, TMouseButton Button, TShiftState Shift,
+void __fastcall TBUIForm::FormMouseDown(TObject *Sender, TMouseButton Button, TShiftState Shift,
           int X, int Y)
 {
     if(Button == mbLeft)
@@ -435,7 +438,7 @@ void __fastcall TForm1::FormMouseDown(TObject *Sender, TMouseButton Button, TShi
 }
 //---------------------------------------------------------------------------
 
-void __fastcall TForm1::SaveExecute(TObject *Sender)
+void __fastcall TBUIForm::SaveExecute(TObject *Sender)
 {
     if(SaveDialog1->Execute())
     {

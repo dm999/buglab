@@ -12,7 +12,7 @@
 #include <PlatformDefaultStyleActnCtrls.hpp>
 #include <Dialogs.hpp>
 //---------------------------------------------------------------------------
-class TForm1 : public TForm
+class TBUIForm : public TForm
 {
 __published:	// IDE-managed Components
     TActionManager *ActionManager1;
@@ -41,9 +41,9 @@ public:
        void Pnt();
        void Blt();
 
-    __fastcall TForm1(TComponent* Owner);
+    __fastcall TBUIForm(TComponent* Owner);
 };
 //---------------------------------------------------------------------------
-extern PACKAGE TForm1 *Form1;
+extern PACKAGE TBUIForm *BUIForm;
 //---------------------------------------------------------------------------
 #endif

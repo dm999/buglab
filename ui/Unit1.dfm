@@ -1,8 +1,8 @@
-object Form1: TForm1
+object BUIForm: TBUIForm
   Left = 0
   Top = 0
   BorderStyle = bsNone
-  Caption = 'Form1'
+  Caption = 'BUI'
   ClientHeight = 580
   ClientWidth = 950
   Color = clBtnFace
