@@ -101,9 +101,9 @@ void saveMazeWithWeights(const std::string& fileName, const Maze& maze, const Ch
         {
             for(size_t w = 1; w < maxWidth - 1; ++w)
             {
-                if(chromo[(q - 1) * width + w - 1]) fprintf(f, "%7s ", "#");
-                //if(maze[q * maxWidth + w] == wall) fprintf(f, "%7s ", "#");
-                else fprintf(f, "%7zd ", maze[q * maxWidth + w]);
+                if(chromo[(q - 1) * width + w - 1]) fprintf(f, "%8s ", "#");
+                //if(maze[q * maxWidth + w] == wall) fprintf(f, "%8s ", "#");
+                else fprintf(f, "%8zd ", maze[q * maxWidth + w]);
             }
 
             fprintf(f, "\n");
@@ -158,8 +158,8 @@ Score runGame(const Chromo& chromo, bool isSaveMazeWithWeights = false, bool isR
 #if defined(SHOW_DIFF)
             Maze mazeStepBefore = mazeStep;
 #endif
-            //runMazeStepByStep(mazeStep, state, 1000000000);
-            runMazeStepByStep(mazeStep, state, 1000000);
+            runMazeStepByStep(mazeStep, state, 100000000000);
+            //runMazeStepByStep(mazeStep, state, 1000000);
             //runMazeStepByStep(mazeStep, state, 1000);
             char buf[1000];
             sprintf(buf, "%09zu", state.n);
