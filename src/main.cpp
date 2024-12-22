@@ -19,6 +19,7 @@
 //genetics
 const size_t reshape = 1;
 //const size_t reshape = 5;
+//const size_t reshape = 20;
 const size_t populationSize = 1000 / reshape;
 //const size_t populationSize = 100000;
 const size_t elite = 2;

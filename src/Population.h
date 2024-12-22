@@ -123,6 +123,23 @@ Score runGame(const Chromo& chromo, bool isSaveMazeWithWeights = false, bool isR
 
     Score reward;
     bool isExit = runMaze(maze, reward);
+    
+#if 0
+    Score maxVal = 0;
+    if(isExit)
+    {
+        for(size_t q = 1; q < maxHeight - 1; ++q)
+        {
+            for(size_t w = 1; w < maxWidth - 1; ++w)
+            {
+                if(maze[q * maxWidth + w] != wall)
+                {
+                    if(maze[q * maxWidth + w] > maxVal) maxVal =  maze[q * maxWidth + w];
+                }
+            }
+        }
+    }
+#endif
 
     if(isSaveMazeWithWeights)
     {
