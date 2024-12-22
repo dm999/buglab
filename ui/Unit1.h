@@ -24,6 +24,8 @@ __published:	// IDE-managed Components
     TSaveDialog *SaveDialog1;
     TAction *Save;
     TAction *Help;
+    TAction *Undo;
+    TAction *Redo;
     void __fastcall ExitExecute(TObject *Sender);
     void __fastcall FormPaint(TObject *Sender);
     void __fastcall RecalcExecute(TObject *Sender);
@@ -36,8 +38,13 @@ __published:	// IDE-managed Components
     void __fastcall SaveExecute(TObject *Sender);
     void __fastcall FormMouseMove(TObject *Sender, TShiftState Shift, int X, int Y);
     void __fastcall HelpExecute(TObject *Sender);
+    void __fastcall UndoExecute(TObject *Sender);
+    void __fastcall RedoExecute(TObject *Sender);
 
-private:	// User declarations
+private:
+
+    bool checkCalcIsInProgress() const;
+
 public:
 
        Graphics::TBitmap * mBMP;

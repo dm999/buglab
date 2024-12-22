@@ -242,7 +242,8 @@ private:
         }
         CoUninitialize();
 
-        Form->Repaint();
+        Form->Pnt();
+        Form->Blt();
     }
 
 public:

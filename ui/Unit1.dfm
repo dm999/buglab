@@ -53,6 +53,16 @@ object BUIForm: TBUIForm
       ShortCut = 16456
       OnExecute = HelpExecute
     end
+    object Undo: TAction
+      Caption = 'Undo'
+      ShortCut = 16474
+      OnExecute = UndoExecute
+    end
+    object Redo: TAction
+      Caption = 'Redo'
+      ShortCut = 16473
+      OnExecute = RedoExecute
+    end
   end
   object OpenDialog1: TOpenDialog
     Filter = 'Text|*.txt'
