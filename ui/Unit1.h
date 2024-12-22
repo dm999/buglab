@@ -33,6 +33,8 @@ __published:	// IDE-managed Components
     void __fastcall FormMouseDown(TObject *Sender, TMouseButton Button, TShiftState Shift,
           int X, int Y);
     void __fastcall SaveExecute(TObject *Sender);
+    void __fastcall FormMouseMove(TObject *Sender, TShiftState Shift, int X, int Y);
+
 private:	// User declarations
 public:
 

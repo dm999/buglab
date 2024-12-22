@@ -14,6 +14,7 @@ object BUIForm: TBUIForm
   OldCreateOrder = False
   Position = poScreenCenter
   OnMouseDown = FormMouseDown
+  OnMouseMove = FormMouseMove
   OnMouseUp = FormMouseUp
   OnPaint = FormPaint
   PixelsPerInch = 96

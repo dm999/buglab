@@ -233,6 +233,8 @@ Maze mazeW;
 Score score = 0;
 
 bool buttonClicked = false;
+bool mouseMoved = false;
+bool doRecalc = true;
 //---------------------------------------------------------------------------
 __fastcall TBUIForm::TBUIForm(TComponent* Owner)
     : TForm(Owner)
@@ -295,15 +297,29 @@ void TBUIForm::Pnt()
                  }
                  else if(mazeW[q * maxWidth + w] < 1000000)
                  {
-                     num =  IntToStr((long long)mazeW[q * maxWidth + w] / 1000) + "k";
+                     if(mazeW[q * maxWidth + w] < 10000)
+                     {
+                         char buf[1024];
+                         std::sprintf(buf, "%.1f", static_cast<float>(mazeW[q * maxWidth + w]) / 1000.0f);
+                         num =  AnsiString(buf) + "k";
+                     }
+                     else
+                         num =  IntToStr((long long)mazeW[q * maxWidth + w] / 1000) + "k";
                  }
                  else if(mazeW[q * maxWidth + w] < 1000000000)
                  {
-                     num =  IntToStr((long long)mazeW[q * maxWidth + w] / 1000000) + "M";
+                     if(mazeW[q * maxWidth + w] < 10000000)
+                     {
+                         char buf[1024];
+                         std::sprintf(buf, "%.1f", static_cast<float>(mazeW[q * maxWidth + w] / 1000) / 1000.0f);
+                         num =  AnsiString(buf) + "M";
+                     }
+                     else
+                         num =  IntToStr((long long)mazeW[q * maxWidth + w] / 1000000) + "M";
                  }
 
                  int tWidth = mBMP->Canvas->TextWidth(num);
-                 int tHeight = mBMP->Canvas->TextWidth(num);
+                 int tHeight = mBMP->Canvas->TextHeight(num);
                  mBMP->Canvas->TextOutA(PaddingLeft + CellWidth * (w - 1) + CellWidth / 2 - tWidth / 2, PaddingTop + CellHeight * (q - 1) + CellHeight / 2 - tHeight / 2, num);
             }
 
@@ -364,13 +380,27 @@ void __fastcall TBUIForm::FormPaint(TObject *Sender)
 
 void __fastcall TBUIForm::RecalcExecute(TObject *Sender)
 {
-    score = 0;
-    Pnt();
-    Blt();
-    mazeW = maze;
-    runMaze(mazeW, score);
-    Pnt();
-    Blt();
+    if(doRecalc)
+    {
+        doRecalc = false;
+
+        score = 0;
+        Pnt();
+        Blt();
+        mazeW = maze;
+        runMaze(mazeW, score);
+        Pnt();
+        Blt();
+    }
+    else // clear
+    {
+        doRecalc = true;
+
+        mazeW = maze;
+        score = 0;
+        Pnt();
+        Blt();
+    }
 }
 //---------------------------------------------------------------------------
 void __fastcall TBUIForm::LoadExecute(TObject *Sender)
@@ -402,7 +432,7 @@ void __fastcall TBUIForm::OpenExecute(TObject *Sender)
 void __fastcall TBUIForm::FormMouseUp(TObject *Sender, TMouseButton Button, TShiftState Shift,
           int X, int Y)
 {
-    if(Button == mbLeft && buttonClicked)
+    if(Button == mbLeft && buttonClicked && !mouseMoved)
     {
         if(X >= PaddingLeft && X <= PaddingLeft + CellWidth * 29 && Y >= PaddingTop && Y <= PaddingTop + CellHeight * 19)
         {
@@ -425,6 +455,7 @@ void __fastcall TBUIForm::FormMouseUp(TObject *Sender, TMouseButton Button, TShi
     }
 
     buttonClicked = false;
+    mouseMoved = false;
 }
 //---------------------------------------------------------------------------
 
@@ -442,7 +473,47 @@ void __fastcall TBUIForm::SaveExecute(TObject *Sender)
 {
     if(SaveDialog1->Execute())
     {
+        OpenDialog1->FileName = SaveDialog1->FileName;
         saveMaze(maze, SaveDialog1->FileName.t_str());
+    }
+}
+//---------------------------------------------------------------------------
+
+
+void __fastcall TBUIForm::FormMouseMove(TObject *Sender, TShiftState Shift, int X,
+          int Y)
+{
+    static int x_recent = 0;
+    static int y_recent = 0;
+
+    if(buttonClicked)
+    {
+        if(X >= PaddingLeft && X <= PaddingLeft + CellWidth * 29 && Y >= PaddingTop && Y <= PaddingTop + CellHeight * 19)
+        {
+            int x = (X - PaddingLeft) / CellWidth;
+            int y = (Y - PaddingTop) / CellHeight;
+
+            if(x != x_recent || y != y_recent)
+            {
+                mouseMoved = true;
+
+                x_recent = x;
+                y_recent = y;
+
+                if(maze[(y + 1) * maxWidth + x + 1] == wall)
+                {
+                    maze[(y + 1) * maxWidth + x + 1] = 0;
+                }
+                else
+                {
+                    maze[(y + 1) * maxWidth + x + 1] = wall;
+                }
+
+                score = 0;
+                Pnt();
+                Blt();
+            }
+        }
     }
 }
 //---------------------------------------------------------------------------
