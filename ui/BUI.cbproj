@@ -61,17 +61,20 @@
 			<ILINK_TranslatedLibraryPath>$(BDS)\lib\$(LANGDIR)\release;$(ILINK_TranslatedLibraryPath)</ILINK_TranslatedLibraryPath>
 		</PropertyGroup>
 		<ItemGroup>
-			<CppCompile Include="BUI.cpp">
-				<BuildOrder>0</BuildOrder>
-			</CppCompile>
-			<ResFiles Include="BUI.res">
-				<BuildOrder>1</BuildOrder>
-			</ResFiles>
 			<CppCompile Include="Unit1.cpp">
 				<Form>BUIForm</Form>
 				<DependentOn>Unit1.h</DependentOn>
 				<BuildOrder>2</BuildOrder>
 			</CppCompile>
+			<ResFiles Include="BUI.res">
+				<BuildOrder>1</BuildOrder>
+			</ResFiles>
+			<CppCompile Include="BUI.cpp">
+				<BuildOrder>0</BuildOrder>
+			</CppCompile>
+			<None Include="BuglabRoutiness.h">
+				<BuildOrder>3</BuildOrder>
+			</None>
 			<FormResources Include="Unit1.dfm"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
