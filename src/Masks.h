@@ -1,12 +1,7 @@
 #ifndef MASKS_H
 #define MASKS_H
 
-
-#include "Masks_x.h"
-#include "Masks_xx.h"
-#include "Masks_xxx.h"
-
-#if 1
+#if 0
 //crusiforms bb (40k)
 Chromo mask =// 5              10             15             20             25
 {
@@ -109,6 +104,10 @@ Chromo mask =// 5              10             15             20             25
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0
 };
 #endif
+
+#include "Masks_x.h"
+#include "Masks_xx.h"
+#include "Masks_xxx.h"
 
 #include "Masks_a.h"
 #include "Masks_old.h"

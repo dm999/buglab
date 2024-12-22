@@ -6,3 +6,5 @@
 /python/run_cython.cpp
 /ui/Debug
 /ui/Release
+/res
+/img

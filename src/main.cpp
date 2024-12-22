@@ -16,12 +16,19 @@
 //#define SAVE_HEATMAP
 //#define RUN_STEP_BY_STEP
 
+//brutual search
+//#define MASKED_BRUTUAL
+
 //genetics
+#if !defined(MASKED_BRUTUAL)
 const size_t reshape = 1;
 //const size_t reshape = 5;
 //const size_t reshape = 20;
 const size_t populationSize = 1000 / reshape;
-//const size_t populationSize = 100000;
+#else
+const size_t reshape = 1;
+const size_t populationSize = 100000;
+#endif
 const size_t elite = 2;
 const size_t populationSizeAndElite = populationSize + elite;
 const float crossoverRate = 1.0f;
@@ -53,6 +60,7 @@ float selectionProbability = 0.85f;
 //parallel
 #define PROCESS_THREADS
 const size_t threadsAmount = 10;
+//const size_t threadsAmount = 50;
 
 //other
 #define VARIABLE_MUTATION_RATE
@@ -60,10 +68,6 @@ const size_t threadsAmount = 10;
 #define STAT
 size_t refreshEvery = 3000 * reshape;
 size_t redefineSeedIfNoChangeEvery = 3000 * reshape;
-
-//brutual search
-//#define MASKED_BRUTUAL
-
 
 const double pi = std::acos(-1);
 
