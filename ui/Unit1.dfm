@@ -48,6 +48,11 @@ object BUIForm: TBUIForm
       ShortCut = 16467
       OnExecute = SaveExecute
     end
+    object Help: TAction
+      Caption = 'Help'
+      ShortCut = 16456
+      OnExecute = HelpExecute
+    end
   end
   object OpenDialog1: TOpenDialog
     Filter = 'Text|*.txt'

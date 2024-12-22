@@ -23,6 +23,7 @@ __published:	// IDE-managed Components
     TOpenDialog *OpenDialog1;
     TSaveDialog *SaveDialog1;
     TAction *Save;
+    TAction *Help;
     void __fastcall ExitExecute(TObject *Sender);
     void __fastcall FormPaint(TObject *Sender);
     void __fastcall RecalcExecute(TObject *Sender);
@@ -34,6 +35,7 @@ __published:	// IDE-managed Components
           int X, int Y);
     void __fastcall SaveExecute(TObject *Sender);
     void __fastcall FormMouseMove(TObject *Sender, TShiftState Shift, int X, int Y);
+    void __fastcall HelpExecute(TObject *Sender);
 
 private:	// User declarations
 public:

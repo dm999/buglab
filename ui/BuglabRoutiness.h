@@ -208,9 +208,50 @@ std::string printRewardFriendly(Score reward)
     return out2;
 }
 
-
 Maze maze;
 Maze mazeW;
 Score score = 0;
+
+bool calcIsInProgress;
+
+//https://docwiki.embarcadero.com/CodeExamples/Sydney/en/SleepSort_(C%2B%2B)
+class TCalcThread : public TThread {
+private:
+
+    TCriticalSection *FLock;
+    TBUIForm * Form;
+
+    void __fastcall Execute()
+    {
+        const HRESULT iniResult = CoInitializeEx(0, COINIT_MULTITHREADED);
+
+        if (!((iniResult == S_OK) || (iniResult == S_FALSE))) {
+            ShowMessage("!");
+            return;
+        }
+
+        try {
+            runMaze(mazeW, score);
+
+            FLock->Acquire();
+            calcIsInProgress = false;
+            FLock->Release();
+        }
+        catch (Exception &ex) {
+            ShowMessage("!");
+        }
+        CoUninitialize();
+
+        Form->Repaint();
+    }
+
+public:
+    TCalcThread(bool CreateSuspended, TCriticalSection *ALock, TBUIForm * f) : TThread(CreateSuspended)
+    {
+        FLock = ALock;
+        Form = f;
+    }
+};
+
 
 #endif
