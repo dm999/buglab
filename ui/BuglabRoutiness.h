@@ -242,8 +242,16 @@ private:
         }
         CoUninitialize();
 
+        Synchronize(repaint);
+        //Form->Repaint();
+    }
+
+    void __fastcall repaint()
+    {
         Form->Pnt();
         Form->Blt();
+
+        Form->Timer1->Enabled = false;
     }
 
 public:

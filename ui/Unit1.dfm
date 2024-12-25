@@ -14,6 +14,7 @@ object BUIForm: TBUIForm
   OldCreateOrder = False
   Position = poScreenCenter
   OnMouseDown = FormMouseDown
+  OnMouseLeave = FormMouseLeave
   OnMouseMove = FormMouseMove
   OnMouseUp = FormMouseUp
   OnPaint = FormPaint
@@ -63,6 +64,11 @@ object BUIForm: TBUIForm
       ShortCut = 16473
       OnExecute = RedoExecute
     end
+    object New: TAction
+      Caption = 'New'
+      ShortCut = 16462
+      OnExecute = NewExecute
+    end
   end
   object OpenDialog1: TOpenDialog
     Filter = 'Text|*.txt'
@@ -75,5 +81,11 @@ object BUIForm: TBUIForm
     Options = [ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
     Left = 32
     Top = 120
+  end
+  object Timer1: TTimer
+    Enabled = False
+    OnTimer = Timer1Timer
+    Left = 32
+    Top = 184
   end
 end

@@ -26,6 +26,7 @@ const size_t CellHeight = 26;
 const size_t CellWidth = 30;
 
 bool mouseDown = false;
+bool mouseRDown = false;
 bool mouseMoved = false;
 bool doRecalc = true;
 MazeData initialOnClick;
@@ -33,9 +34,18 @@ MazeData initialOnClick;
 TCriticalSection *Lock;
 TThread *Thread = NULL;
 
-const size_t maxCtrlZHistorty = 10;
+const size_t maxCtrlZHistorty = 100;
 std::deque<Maze> ctrlZ;
 std::deque<Maze> ctrlY;
+
+AnsiString curFileName = "";
+
+long long secondsPassed = 0;
+
+int oldX = 0;
+int oldY = 0;
+
+int nonWallsCount = 551;
 //---------------------------------------------------------------------------
 __fastcall TBUIForm::TBUIForm(TComponent* Owner)
     : TForm(Owner)
@@ -66,15 +76,38 @@ bool TBUIForm::checkCalcIsInProgress() const
     return continueFoo;
 }
 //---------------------------------------------------------------------------
+void TBUIForm::calcNonWalls() const
+{
+    nonWallsCount = 0;
+
+    for(int q = 1; q <= height; ++q)
+    {
+        for(int w = 1; w <= width; ++w)
+        {
+            if(maze[q * maxWidth + w] != wall) ++nonWallsCount;
+        }
+    }
+}
+//---------------------------------------------------------------------------
 void TBUIForm::Pnt()
 {
     if(!checkCalcIsInProgress())
     {
-        mBMP->Canvas->TextOutA(10, BUIForm->Height - 20, "Score: calculating...");
+        mBMP->Canvas->Brush->Color = clBtnFace;
+        mBMP->Canvas->Brush->Style = bsSolid;
+        mBMP->Canvas->Pen->Color = clBtnFace;
+        mBMP->Canvas->Rectangle(1, BUIForm->Height - 20, mBMP->Width - 1, mBMP->Height - 1);
+
+        if(secondsPassed > 0)
+            mBMP->Canvas->TextOutA(10, BUIForm->Height - 20, "Score: calculating... "  + IntToStr((long long)secondsPassed));
+        else
+            mBMP->Canvas->TextOutA(10, BUIForm->Height - 20, "Score: calculating...");
         return;
     }
 
-    mBMP->Canvas->Brush->Color = clBlack;
+    //mBMP->Canvas->Brush->Color = clBlack;
+    mBMP->Canvas->Brush->Color = clBtnFace;
+    mBMP->Canvas->Brush->Style = bsSolid;
     mBMP->Canvas->Pen->Color = clRed;
     mBMP->Canvas->Rectangle(0, 0, mBMP->Width, mBMP->Height);
 
@@ -104,7 +137,8 @@ void TBUIForm::Pnt()
                  mBMP->Canvas->Rectangle(PaddingLeft + CellWidth * (w - 1), PaddingTop + CellHeight * (q - 1), PaddingLeft + CellWidth * w, PaddingTop + CellHeight * q);
 
                  AnsiString num = "";
-                 mBMP->Canvas->Font->Color = clRed;
+                 //mBMP->Canvas->Font->Color = clRed;
+                 mBMP->Canvas->Font->Color = clSilver;
                  mBMP->Canvas->Font->Size = 7;
                  if(mazeW[q * maxWidth + w] < 1000)
                  {
@@ -143,9 +177,11 @@ void TBUIForm::Pnt()
     }
 
     mBMP->Canvas->Font->Size = 8;
-    mBMP->Canvas->Brush->Color = clBlack;
+    //mBMP->Canvas->Brush->Color = clBlack;
+    mBMP->Canvas->Brush->Color = clBtnFace;
     mBMP->Canvas->Pen->Color = clRed;
     mBMP->Canvas->Font->Color = clRed;
+    //mBMP->Canvas->Brush->Style = bsClear;
 
     for(int q = 0; q <= 19; ++q)
     {
@@ -154,6 +190,15 @@ void TBUIForm::Pnt()
             mBMP->Canvas->MoveTo(PaddingLeft, PaddingTop + CellHeight * q);
             mBMP->Canvas->LineTo(PaddingLeft + CellWidth * 29, PaddingTop + CellHeight * q);
         }
+        else
+        {
+            mBMP->Canvas->MoveTo(PaddingLeft - 2, PaddingTop + CellHeight * q);
+            mBMP->Canvas->LineTo(PaddingLeft + 3, PaddingTop + CellHeight * q);
+
+            mBMP->Canvas->MoveTo(PaddingLeft + CellWidth * 29 - 2, PaddingTop + CellHeight * q);
+            mBMP->Canvas->LineTo(PaddingLeft + CellWidth * 29 + 3, PaddingTop + CellHeight * q);
+        }
+
         if(q < 19)
         {
              int tHeight = mBMP->Canvas->TextHeight(IntToStr(q + 1));
@@ -169,6 +214,15 @@ void TBUIForm::Pnt()
             mBMP->Canvas->MoveTo(PaddingLeft + CellWidth * q, PaddingTop);
             mBMP->Canvas->LineTo(PaddingLeft + CellWidth * q, PaddingTop + CellHeight * 19);
         }
+        else
+        {
+            mBMP->Canvas->MoveTo(PaddingLeft + CellWidth * q, PaddingTop - 2);
+            mBMP->Canvas->LineTo(PaddingLeft + CellWidth * q, PaddingTop + 3);
+
+            mBMP->Canvas->MoveTo(PaddingLeft + CellWidth * q, PaddingTop + CellHeight * 19 - 2);
+            mBMP->Canvas->LineTo(PaddingLeft + CellWidth * q, PaddingTop + CellHeight * 19 + 3);
+        }
+
         if(q < 29)
         {
              int tWidth = mBMP->Canvas->TextWidth(IntToStr(q + 1));
@@ -177,7 +231,10 @@ void TBUIForm::Pnt()
         }
     }
 
-    mBMP->Canvas->TextOutA(10, BUIForm->Height - 20, "Score: " + AnsiString(printRewardFriendly(score).c_str()));
+    if(curFileName != "")
+        mBMP->Canvas->TextOutA(10, BUIForm->Height - 20, "Score: " + AnsiString(printRewardFriendly(score).c_str()) + " (" + curFileName + ")" + " [" + IntToStr(nonWallsCount) + "]");
+    else
+        mBMP->Canvas->TextOutA(10, BUIForm->Height - 20, "Score: " + AnsiString(printRewardFriendly(score).c_str()) + " [" + IntToStr(nonWallsCount) + "]");
 }
 
 void TBUIForm::Blt()
@@ -201,6 +258,8 @@ void __fastcall TBUIForm::RecalcExecute(TObject *Sender)
     {
         doRecalc = false;
 
+        secondsPassed = 0;
+
         score = 0;
         Pnt();
         Blt();
@@ -209,6 +268,8 @@ void __fastcall TBUIForm::RecalcExecute(TObject *Sender)
         Lock->Acquire();
         calcIsInProgress = true;
         Lock->Release();
+
+        Timer1->Enabled = true;
 
         if(Thread) delete Thread;
 
@@ -239,9 +300,14 @@ void __fastcall TBUIForm::LoadExecute(TObject *Sender)
     {
         doRecalc = true;
 
+        ctrlZ.clear();
+        ctrlY.clear();
+
         loadState(maze, OpenDialog1->FileName.t_str());
         mazeW = maze;
         score = 0;
+        calcNonWalls();
+
         Pnt();
         Blt();
     }
@@ -254,13 +320,21 @@ void __fastcall TBUIForm::OpenExecute(TObject *Sender)
 
     if(OpenDialog1->Execute())
     {
+        curFileName = ExtractFileName(OpenDialog1->FileName);
+        BUIForm->Caption = "BUI: " + curFileName;
+
         doRecalc = true;
+
+        ctrlZ.clear();
+        ctrlY.clear();
 
         OpenDialog1->InitialDir = ExtractFilePath(OpenDialog1->FileName);
 
         loadState(maze, OpenDialog1->FileName.t_str());
         mazeW = maze;
         score = 0;
+        calcNonWalls();
+
         Pnt();
         Blt();
     }
@@ -270,10 +344,10 @@ void __fastcall TBUIForm::OpenExecute(TObject *Sender)
 void __fastcall TBUIForm::FormMouseDown(TObject *Sender, TMouseButton Button, TShiftState Shift,
           int X, int Y)
 {
-    if(!checkCalcIsInProgress()) return;
-
     if(Button == mbLeft)
     {
+        if(!checkCalcIsInProgress()) return;
+
         mouseDown = true;
 
         if(X >= PaddingLeft && X <= PaddingLeft + CellWidth * 29 && Y >= PaddingTop && Y <= PaddingTop + CellHeight * 19)
@@ -282,6 +356,16 @@ void __fastcall TBUIForm::FormMouseDown(TObject *Sender, TMouseButton Button, TS
             int y = (Y - PaddingTop) / CellHeight;
             initialOnClick = maze[(y + 1) * maxWidth + x + 1];
         }
+    }
+
+    if(Button == mbRight)
+    {
+        mouseRDown = true;
+
+        oldX = X;
+        oldY = Y;
+
+        BUIForm->Cursor = crSizeAll;
     }
 }
 //---------------------------------------------------------------------------
@@ -292,19 +376,26 @@ void __fastcall TBUIForm::SaveExecute(TObject *Sender)
 
     if(SaveDialog1->Execute())
     {
+        curFileName = ExtractFileName(SaveDialog1->FileName);
+        BUIForm->Caption = "BUI: " + curFileName;
+
         SaveDialog1->InitialDir = ExtractFilePath(SaveDialog1->FileName);
         OpenDialog1->FileName = SaveDialog1->FileName;
         saveMaze(maze, SaveDialog1->FileName.t_str());
+
+        Pnt();
+        Blt();
     }
 }
 //---------------------------------------------------------------------------
 void __fastcall TBUIForm::FormMouseUp(TObject *Sender, TMouseButton Button, TShiftState Shift,
           int X, int Y)
 {
-    if(!checkCalcIsInProgress()) return;
-
     if(Button == mbLeft && mouseDown && !mouseMoved)
     {
+
+        if(!checkCalcIsInProgress()) return;
+
         if(X >= PaddingLeft && X <= PaddingLeft + CellWidth * 29 && Y >= PaddingTop && Y <= PaddingTop + CellHeight * 19)
         {
             int x = (X - PaddingLeft) / CellWidth;
@@ -325,13 +416,18 @@ void __fastcall TBUIForm::FormMouseUp(TObject *Sender, TMouseButton Button, TShi
 
             doRecalc = true;
 
+            calcNonWalls();
+
             score = 0;
             Pnt();
             Blt();
         }
     }
 
+    BUIForm->Cursor = crDefault;
+
     mouseDown = false;
+    mouseRDown = false;
     mouseMoved = false;
 }
 //---------------------------------------------------------------------------
@@ -372,11 +468,19 @@ void __fastcall TBUIForm::FormMouseMove(TObject *Sender, TShiftState Shift, int 
 
                 doRecalc = true;
 
+                calcNonWalls();
+
                 score = 0;
                 Pnt();
                 Blt();
             }
         }
+    }
+
+    if(mouseRDown)
+    {
+        BUIForm->Left += X - oldX;
+        BUIForm->Top += Y - oldY;
     }
 }
 //---------------------------------------------------------------------------
@@ -388,8 +492,9 @@ void __fastcall TBUIForm::HelpExecute(TObject *Sender)
         "Ctrl-O - open file\n"
         "Ctrl-S - save file\n"
         "Ctrl-L - reload opened file\n"
+        "Ctrl-N - new\n"
         "Ctrl-Z - Undo\n"
-        "Ctrl-Y - Undo\n"
+        "Ctrl-Y - Redo\n"
         "Space - calculate score / clear\n"
         "Escape - exit").c_bstr(), WideString("Help").c_bstr(), MB_ICONINFORMATION);
 }
@@ -405,6 +510,8 @@ void __fastcall TBUIForm::UndoExecute(TObject *Sender)
     ctrlZ.pop_back();
 
     doRecalc = true;
+
+    calcNonWalls();
 
     Pnt();
     Blt();
@@ -422,8 +529,49 @@ void __fastcall TBUIForm::RedoExecute(TObject *Sender)
 
     doRecalc = true;
 
+    calcNonWalls();
+
     Pnt();
     Blt();
+}
+//---------------------------------------------------------------------------
+
+
+void __fastcall TBUIForm::Timer1Timer(TObject *Sender)
+{
+    ++secondsPassed;
+
+    Pnt();
+    Blt();
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TBUIForm::NewExecute(TObject *Sender)
+{
+    initMaze(maze);
+    mazeW = maze;
+    score = 0;
+
+    curFileName = "";
+
+    OpenDialog1->FileName = "";
+    SaveDialog1->FileName = "";
+
+    doRecalc = true;
+
+    calcNonWalls();
+
+    Pnt();
+    Blt();
+}
+//---------------------------------------------------------------------------
+void __fastcall TBUIForm::FormMouseLeave(TObject *Sender)
+{
+    BUIForm->Cursor = crDefault;
+
+    mouseDown = false;
+    mouseRDown = false;
+    mouseMoved = false;
 }
 //---------------------------------------------------------------------------
 

@@ -11,6 +11,7 @@
 #include <ActnMan.hpp>
 #include <PlatformDefaultStyleActnCtrls.hpp>
 #include <Dialogs.hpp>
+#include <ExtCtrls.hpp>
 //---------------------------------------------------------------------------
 class TBUIForm : public TForm
 {
@@ -26,6 +27,8 @@ __published:	// IDE-managed Components
     TAction *Help;
     TAction *Undo;
     TAction *Redo;
+    TTimer *Timer1;
+    TAction *New;
     void __fastcall ExitExecute(TObject *Sender);
     void __fastcall FormPaint(TObject *Sender);
     void __fastcall RecalcExecute(TObject *Sender);
@@ -40,10 +43,15 @@ __published:	// IDE-managed Components
     void __fastcall HelpExecute(TObject *Sender);
     void __fastcall UndoExecute(TObject *Sender);
     void __fastcall RedoExecute(TObject *Sender);
+    void __fastcall Timer1Timer(TObject *Sender);
+    void __fastcall NewExecute(TObject *Sender);
+    void __fastcall FormMouseLeave(TObject *Sender);
 
 private:
 
     bool checkCalcIsInProgress() const;
+
+    void calcNonWalls() const;
 
 public:
 
