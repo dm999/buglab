@@ -401,6 +401,8 @@ void maskedBrutualForce(Population& pop)
 
     float wholeSize = std::pow(2, countBits);
 
+    std::chrono::steady_clock::time_point timeStartWhole = std::chrono::steady_clock::now();
+
     while(1)
     {
         printf("Epoch: %5zd %.3f ", epoch, static_cast<float>((epoch - 1) * populationSize) / wholeSize);
@@ -470,9 +472,15 @@ void maskedBrutualForce(Population& pop)
         }
 
         long long timeTaken = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStart).count();
-        float ms = static_cast<float>(timeTaken) / 1000.0f / 1000.0f;
+        float seconds = static_cast<float>(timeTaken) / 1000.0f / 1000.0f;
 
-        printf("epoch time = %5.1fs\n", ms);
+        long long timeTakenWhole = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - timeStartWhole).count();
+        float secondsWhole = static_cast<float>(timeTakenWhole) / 1000.0f / 1000.0f;
+
+        float elapsedPercent = static_cast<float>((epoch - 1) * populationSize) / wholeSize;
+        float restPercent = 1.0f - elapsedPercent;
+
+        printf("epoch time = %5.1fs elapsed = %.0fm estimated = %.0fh\n", seconds, secondsWhole / 60.0f, ((restPercent * secondsWhole) / elapsedPercent) / 60.0f / 60.0f);
 
         ++epoch;
     }

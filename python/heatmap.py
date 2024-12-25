@@ -12,8 +12,8 @@ def createPlot(filename):
         line = line.split('\n')
         val = line[0].replace("#", "0")
         array = []
-        for i in range(0, 204, 8):
-            val2 = val[i:i+7]
+        for i in range(0, (10 * 29) + 1, 10):
+            val2 = val[i : i + 9]
             val2 = val2.replace(" ", "")
             if(val2):
                 array.append(int(val2))
@@ -28,8 +28,8 @@ def createPlot(filename):
     fig.savefig(dir + filename + '.jpg')
     plt.close()
 
-createPlot("030364964")
+createPlot("2772946886")
 
-for i in range (1000000, 30400000, 1000000):
-    filename = str(i).zfill(9)
+for i in range (100000000, 2800000000, 100000000):
+    filename = str(i).zfill(10)
     createPlot(filename)

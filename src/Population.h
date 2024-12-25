@@ -101,9 +101,9 @@ void saveMazeWithWeights(const std::string& fileName, const Maze& maze, const Ch
         {
             for(size_t w = 1; w < maxWidth - 1; ++w)
             {
-                if(chromo[(q - 1) * width + w - 1]) fprintf(f, "%8s ", "#");
-                //if(maze[q * maxWidth + w] == wall) fprintf(f, "%8s ", "#");
-                else fprintf(f, "%8zd ", maze[q * maxWidth + w]);
+                if(chromo[(q - 1) * width + w - 1]) fprintf(f, "%9s ", "#");
+                //if(maze[q * maxWidth + w] == wall) fprintf(f, "%9s ", "#");
+                else fprintf(f, "%9zd ", maze[q * maxWidth + w]);
             }
 
             fprintf(f, "\n");
@@ -175,11 +175,12 @@ Score runGame(const Chromo& chromo, bool isSaveMazeWithWeights = false, bool isR
 #if defined(SHOW_DIFF)
             Maze mazeStepBefore = mazeStep;
 #endif
-            runMazeStepByStep(mazeStep, state, 100000000000);
-            //runMazeStepByStep(mazeStep, state, 1000000);
-            //runMazeStepByStep(mazeStep, state, 1000);
+            //runMazeStepByStep(mazeStep, state, 1e11);
+            runMazeStepByStep(mazeStep, state, 1e8);
+            //runMazeStepByStep(mazeStep, state, 1e6);
+            //runMazeStepByStep(mazeStep, state, 1e3);
             char buf[1000];
-            sprintf(buf, "%09zu", state.n);
+            sprintf(buf, "%010zu", state.n);
 #if !defined(SHOW_DIFF)
             std::string fName = "./" STEP_FOLDER_NAME "/w_" + std::string(buf) + ".txt";
             saveMazeWithWeights(fName.c_str(), mazeStep, chromo);
