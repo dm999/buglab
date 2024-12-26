@@ -1,10 +1,10 @@
 object BUIForm: TBUIForm
   Left = 0
   Top = 0
-  BorderStyle = bsNone
+  BorderIcons = [biSystemMenu, biMaximize]
   Caption = 'BUI'
-  ClientHeight = 580
-  ClientWidth = 950
+  ClientHeight = 553
+  ClientWidth = 942
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,6 +18,7 @@ object BUIForm: TBUIForm
   OnMouseMove = FormMouseMove
   OnMouseUp = FormMouseUp
   OnPaint = FormPaint
+  OnResize = FormResize
   PixelsPerInch = 96
   TextHeight = 13
   object ActionManager1: TActionManager

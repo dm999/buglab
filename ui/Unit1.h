@@ -12,6 +12,8 @@
 #include <PlatformDefaultStyleActnCtrls.hpp>
 #include <Dialogs.hpp>
 #include <ExtCtrls.hpp>
+
+typedef unsigned long long MazeData;
 //---------------------------------------------------------------------------
 class TBUIForm : public TForm
 {
@@ -46,12 +48,16 @@ __published:	// IDE-managed Components
     void __fastcall Timer1Timer(TObject *Sender);
     void __fastcall NewExecute(TObject *Sender);
     void __fastcall FormMouseLeave(TObject *Sender);
+    void __fastcall FormResize(TObject *Sender);
 
 private:
 
     bool checkCalcIsInProgress() const;
 
     void calcNonWalls() const;
+    void processUniqueCruci(const MazeData& cell) const;
+
+    int getFontSize() const;
 
 public:
 

@@ -20,10 +20,14 @@ TBUIForm *BUIForm;
 
 #include "BuglabRoutiness.h"
 
+const size_t WinHeight = 580;
+const size_t WinWidth = 950;
+
 const size_t PaddingTop = 33;
 const size_t PaddingLeft = 35;
-const size_t CellHeight = 26;
-const size_t CellWidth = 30;
+
+size_t CellHeight = (WinHeight - PaddingTop * 2 - 40) / 19;
+size_t CellWidth = (WinWidth - PaddingLeft * 2 - 10) / 29;
 
 bool mouseDown = false;
 bool mouseRDown = false;
@@ -46,6 +50,7 @@ int oldX = 0;
 int oldY = 0;
 
 int nonWallsCount = 551;
+std::vector<MazeData> uniqueCruci;
 //---------------------------------------------------------------------------
 __fastcall TBUIForm::TBUIForm(TComponent* Owner)
     : TForm(Owner)
@@ -79,6 +84,7 @@ bool TBUIForm::checkCalcIsInProgress() const
 void TBUIForm::calcNonWalls() const
 {
     nonWallsCount = 0;
+    uniqueCruci.clear();
 
     for(int q = 1; q <= height; ++q)
     {
@@ -89,6 +95,33 @@ void TBUIForm::calcNonWalls() const
     }
 }
 //---------------------------------------------------------------------------
+void TBUIForm::processUniqueCruci(const MazeData& cell) const
+{
+    const float uniqueThreshold = 0.1f;
+
+    bool isUniqeCruci = true;
+
+    for(size_t q = 0; q < uniqueCruci.size(); ++q)
+    {
+        if(std::abs((long long)uniqueCruci[q] - (long long)cell) < cell * uniqueThreshold)
+        {
+            isUniqeCruci = false;
+        }
+    }
+
+    if(isUniqeCruci)
+    {
+        uniqueCruci.push_back(cell);
+    }
+}
+//---------------------------------------------------------------------------
+int TBUIForm::getFontSize() const
+{
+    int size = (BUIForm->Height / 100) + 1;
+
+    return size;
+}
+//---------------------------------------------------------------------------
 void TBUIForm::Pnt()
 {
     if(!checkCalcIsInProgress())
@@ -96,26 +129,29 @@ void TBUIForm::Pnt()
         mBMP->Canvas->Brush->Color = clBtnFace;
         mBMP->Canvas->Brush->Style = bsSolid;
         mBMP->Canvas->Pen->Color = clBtnFace;
-        mBMP->Canvas->Rectangle(1, BUIForm->Height - 20, mBMP->Width - 1, mBMP->Height - 1);
+        mBMP->Canvas->Rectangle(1, BUIForm->Height - 50, mBMP->Width - 1, mBMP->Height - 1);
 
         if(secondsPassed > 0)
-            mBMP->Canvas->TextOutA(10, BUIForm->Height - 20, "Score: calculating... "  + IntToStr((long long)secondsPassed));
+            mBMP->Canvas->TextOutA(10, BUIForm->Height - 50, "Score: calculating... "  + IntToStr((long long)secondsPassed));
         else
-            mBMP->Canvas->TextOutA(10, BUIForm->Height - 20, "Score: calculating...");
+            mBMP->Canvas->TextOutA(10, BUIForm->Height - 50, "Score: calculating...");
         return;
     }
 
-    //mBMP->Canvas->Brush->Color = clBlack;
     mBMP->Canvas->Brush->Color = clBtnFace;
     mBMP->Canvas->Brush->Style = bsSolid;
-    mBMP->Canvas->Pen->Color = clRed;
+    //mBMP->Canvas->Pen->Color = clRed;
+    mBMP->Canvas->Pen->Color = clBtnFace;
     mBMP->Canvas->Rectangle(0, 0, mBMP->Width, mBMP->Height);
 
+    uniqueCruci.clear();
 
     for(int q = 1; q <= height; ++q)
     {
         for(int w = 1; w <= width; ++w)
         {
+            const MazeData cell = mazeW[q * maxWidth + w];
+
             if(maze[q * maxWidth + w] == wall)
             {
                  mBMP->Canvas->Brush->Color = clGray;//RGB(128, 128, 128);
@@ -139,32 +175,60 @@ void TBUIForm::Pnt()
                  AnsiString num = "";
                  //mBMP->Canvas->Font->Color = clRed;
                  mBMP->Canvas->Font->Color = clSilver;
-                 mBMP->Canvas->Font->Size = 7;
-                 if(mazeW[q * maxWidth + w] < 1000)
+
+                 bool isCruciForm = false;
+
+                 int countExpLarge = 0;
+                 int countNearExpLarge = 0;
+
+                 const float cruciThreshold = 1.8f;
+                 const float cruciNearThreshold = 1.3f;
+
+                 if(cell > mazeW[(q + 0) * maxWidth + w - 1] * cruciThreshold) ++countExpLarge;
+                 if(cell > mazeW[(q + 0) * maxWidth + w + 1] * cruciThreshold) ++countExpLarge;
+                 if(cell > mazeW[(q - 1) * maxWidth + w + 0] * cruciThreshold) ++countExpLarge;
+                 if(cell > mazeW[(q + 1) * maxWidth + w + 0] * cruciThreshold) ++countExpLarge;
+
+                 if(cell > mazeW[(q + 0) * maxWidth + w - 1] * cruciNearThreshold) ++countNearExpLarge;
+                 if(cell > mazeW[(q + 0) * maxWidth + w + 1] * cruciNearThreshold) ++countNearExpLarge;
+                 if(cell > mazeW[(q - 1) * maxWidth + w + 0] * cruciNearThreshold) ++countNearExpLarge;
+                 if(cell > mazeW[(q + 1) * maxWidth + w + 0] * cruciNearThreshold) ++countNearExpLarge;
+
+                 if(countNearExpLarge >= 3)
                  {
-                     num =  IntToStr((long long)mazeW[q * maxWidth + w]);
+                     mBMP->Canvas->Font->Color = clYellow;
+
+                     if(countExpLarge >= 3) mBMP->Canvas->Font->Color = clLime;
+
+                     processUniqueCruci(cell);
                  }
-                 else if(mazeW[q * maxWidth + w] < 1000000)
+
+                 mBMP->Canvas->Font->Size = getFontSize();
+                 if(cell < 1000)
                  {
-                     if(mazeW[q * maxWidth + w] < 10000)
+                     num =  IntToStr((long long)cell);
+                 }
+                 else if(cell < 1000000)
+                 {
+                     if(cell < 10000)
                      {
                          char buf[1024];
-                         std::sprintf(buf, "%.1f", static_cast<float>(mazeW[q * maxWidth + w]) / 1000.0f);
+                         std::sprintf(buf, "%.1f", static_cast<float>(cell) / 1000.0f);
                          num =  AnsiString(buf) + "k";
                      }
                      else
-                         num =  IntToStr((long long)mazeW[q * maxWidth + w] / 1000) + "k";
+                         num =  IntToStr((long long)cell / 1000) + "k";
                  }
-                 else if(mazeW[q * maxWidth + w] < 1000000000)
+                 else if(cell < 1000000000)
                  {
-                     if(mazeW[q * maxWidth + w] < 10000000)
+                     if(cell < 10000000)
                      {
                          char buf[1024];
-                         std::sprintf(buf, "%.1f", static_cast<float>(mazeW[q * maxWidth + w] / 1000) / 1000.0f);
+                         std::sprintf(buf, "%.1f", static_cast<float>(cell / 1000) / 1000.0f);
                          num =  AnsiString(buf) + "M";
                      }
                      else
-                         num =  IntToStr((long long)mazeW[q * maxWidth + w] / 1000000) + "M";
+                         num =  IntToStr((long long)cell / 1000000) + "M";
                  }
 
                  int tWidth = mBMP->Canvas->TextWidth(num);
@@ -176,7 +240,7 @@ void TBUIForm::Pnt()
         }
     }
 
-    mBMP->Canvas->Font->Size = 8;
+    mBMP->Canvas->Font->Size = getFontSize() + 1;
     //mBMP->Canvas->Brush->Color = clBlack;
     mBMP->Canvas->Brush->Color = clBtnFace;
     mBMP->Canvas->Pen->Color = clRed;
@@ -232,9 +296,9 @@ void TBUIForm::Pnt()
     }
 
     if(curFileName != "")
-        mBMP->Canvas->TextOutA(10, BUIForm->Height - 20, "Score: " + AnsiString(printRewardFriendly(score).c_str()) + " (" + curFileName + ")" + " [" + IntToStr(nonWallsCount) + "]");
+        mBMP->Canvas->TextOutA(10, BUIForm->Height - 50, "Score: " + AnsiString(printRewardFriendly(score).c_str()) + " (" + curFileName + ")" + " [" + IntToStr(nonWallsCount) + "]" + " {" + IntToStr((int)uniqueCruci.size()) + "}");
     else
-        mBMP->Canvas->TextOutA(10, BUIForm->Height - 20, "Score: " + AnsiString(printRewardFriendly(score).c_str()) + " [" + IntToStr(nonWallsCount) + "]");
+        mBMP->Canvas->TextOutA(10, BUIForm->Height - 50, "Score: " + AnsiString(printRewardFriendly(score).c_str()) + " [" + IntToStr(nonWallsCount) + "]" + " {" + IntToStr((int)uniqueCruci.size()) + "}");
 }
 
 void TBUIForm::Blt()
@@ -572,6 +636,21 @@ void __fastcall TBUIForm::FormMouseLeave(TObject *Sender)
     mouseDown = false;
     mouseRDown = false;
     mouseMoved = false;
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TBUIForm::FormResize(TObject *Sender)
+{
+    if(!checkCalcIsInProgress()) return;
+
+    mBMP->Width = BUIForm->Width;
+    mBMP->Height = BUIForm->Height;
+
+    CellHeight = (BUIForm->Height - PaddingTop * 2 - 40) / 19;
+    CellWidth = (BUIForm->Width - PaddingLeft * 2 - 10) / 29;
+
+    BUIForm->Pnt();
+    BUIForm->Blt();
 }
 //---------------------------------------------------------------------------
 
