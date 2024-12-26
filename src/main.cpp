@@ -66,8 +66,8 @@ const size_t threadsAmount = 10;
 #define VARIABLE_MUTATION_RATE
 #define NEW_TOURNAMENT
 #define STAT
-size_t refreshEvery = 3000 * reshape;
-size_t redefineSeedIfNoChangeEvery = 3000 * reshape;
+size_t refreshEvery = 3000;
+size_t redefineSeedIfNoChangeEvery = 3000;
 
 const double pi = std::acos(-1);
 
@@ -413,7 +413,8 @@ void maskedBrutualForce(Population& pop)
         Score bestReward = 0;
         if(epoch == 1)
         {
-            bestReward = runGame(pop[0].val);
+            int maxCruci;
+            bestReward = runGame(pop[0].val, maxCruci);
             best = pop[0].val;
         }
         else bestReward = assignFitness(pop, best, bestIndex);

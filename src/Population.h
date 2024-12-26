@@ -14,6 +14,13 @@ struct PopElement
 
 typedef std::vector<PopElement> Population;
 
+template <typename T>
+static T Clamp(T val, T minval, T maxval)
+{
+    //assert(minval <= maxval && "Invalid clamp range");
+    return std::max(std::min(val, maxval), minval);
+}
+
 void initPopulation(Population& pop)
 {
     std::uniform_real_distribution dist(0.0f, 1.0f);
@@ -114,7 +121,7 @@ void saveMazeWithWeights(const std::string& fileName, const Maze& maze, const Ch
 }
 
 
-Score runGame(const Chromo& chromo, bool isSaveMazeWithWeights = false, bool isRunStepByStep = false)
+Score runGame(const Chromo& chromo, int& maxCruci, bool isSaveMazeWithWeights = false, bool isRunStepByStep = false)
 {
     Maze maze;
     initMaze(maze);
@@ -139,6 +146,54 @@ Score runGame(const Chromo& chromo, bool isSaveMazeWithWeights = false, bool isR
             }
         }
     }
+#endif
+
+#if 1
+    std::vector<MazeData> uniqueCruci;
+    maxCruci = 0;
+    if(isExit)
+    {
+        const float cruciNearThreshold = 1.3f;
+
+        for(size_t q = 1; q < maxHeight - 1; ++q)
+        {
+            for(size_t w = 1; w < maxWidth - 1; ++w)
+            {
+                int countNearExpLarge = 0;
+
+                MazeData cell = maze[q * maxWidth + w];
+
+                if(cell == wall) continue;
+
+                if(cell > maze[(q + 0) * maxWidth + w - 1] * cruciNearThreshold && maze[(q + 0) * maxWidth + w - 1] != wall && maze[(q + 0) * maxWidth + w - 1] != externalWall) ++countNearExpLarge;
+                if(cell > maze[(q + 0) * maxWidth + w + 1] * cruciNearThreshold && maze[(q + 0) * maxWidth + w + 1] != wall && maze[(q + 0) * maxWidth + w + 1] != externalWall) ++countNearExpLarge;
+                if(cell > maze[(q - 1) * maxWidth + w + 0] * cruciNearThreshold && maze[(q - 1) * maxWidth + w + 0] != wall && maze[(q - 1) * maxWidth + w + 0] != externalWall) ++countNearExpLarge;
+                if(cell > maze[(q + 1) * maxWidth + w + 0] * cruciNearThreshold && maze[(q + 1) * maxWidth + w + 0] != wall && maze[(q + 1) * maxWidth + w + 0] != externalWall) ++countNearExpLarge;
+
+
+                if(countNearExpLarge >= 3)
+                {
+                    const float uniqueThreshold = 0.1f;
+
+                    bool isUniqeCruci = true;
+
+                    for(size_t q = 0; q < uniqueCruci.size(); ++q)
+                    {
+                        if(std::abs((long long)uniqueCruci[q] - (long long)cell) < cell * uniqueThreshold)
+                        {
+                            isUniqeCruci = false;
+                        }
+                    }
+
+                    if(isUniqeCruci)
+                    {
+                        uniqueCruci.push_back(cell);
+                    }
+                }
+            }
+        }
+    }
+    maxCruci = uniqueCruci.size();
 #endif
 
     if(isSaveMazeWithWeights)
@@ -218,9 +273,20 @@ Score assignFitness(Population& pop, Chromo& best, size_t& bestIndex)
         auto processLambda = [&](size_t start, size_t end){
             for(size_t q = start; q < end; ++q)
             {
-                Score reward = runGame(pop[q].val);
+                int maxCruci;
+                Score reward = runGame(pop[q].val, maxCruci);
 
+                //regularizer
+#if 0
+                //rewards[q] = reward + maxCruci * 10;//std::pow(2, maxCruci);
+
+                //rewards[q] = reward + maxCruci * 1e1;//second row (14 crusiforms)
+                //rewards[q] = reward + maxCruci * 1e2;//third row (20 crusiforms)
+                rewards[q] = reward + Clamp(maxCruci - 14, 0, 551) * 1e5;//third row (20 crusiforms)
+                //rewards[q] = reward + Clamp(maxCruci - 20, 0, 551) * 1e5;//forth row (25 crusiforms)
+#else
                 rewards[q] = reward;
+#endif
 
                 pop[q].fitness = reward;
                 if(reward == 0) pop[q].fitness = 1;
@@ -244,7 +310,8 @@ Score assignFitness(Population& pop, Chromo& best, size_t& bestIndex)
 #else
     for(size_t q = 0; q < populationSize; ++q)
     {
-        Score reward = runGame(pop[q].val);
+        int maxCruci;
+        Score reward = runGame(pop[q].val, maxCruci);
 
         if(reward > bestReward)
         {
