@@ -19,6 +19,13 @@
 //brutual search
 //#define MASKED_BRUTUAL
 
+//regularization
+//#define PERFORM_REGULARIZATION
+//#define REGULARIZATION_CRUCI_AMOUNT 20 //third row (20 crusiforms by default)
+//#define REGULARIZATION_CRUCI_ADD 1e5
+//#define REGULARIZATION_CRUCI_AMOUNT 25 //forth row (25 crusiforms by default)
+//#define REGULARIZATION_CRUCI_ADD 1e7
+
 //genetics
 #if !defined(MASKED_BRUTUAL)
 const size_t reshape = 1;

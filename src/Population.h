@@ -148,7 +148,7 @@ Score runGame(const Chromo& chromo, int& maxCruci, bool isSaveMazeWithWeights = 
     }
 #endif
 
-#if 1
+#if defined(PERFORM_REGULARIZATION)
     std::vector<MazeData> uniqueCruci;
     maxCruci = 0;
     if(isExit)
@@ -277,13 +277,15 @@ Score assignFitness(Population& pop, Chromo& best, size_t& bestIndex)
                 Score reward = runGame(pop[q].val, maxCruci);
 
                 //regularizer
-#if 0
+#if defined(PERFORM_REGULARIZATION)
                 //rewards[q] = reward + maxCruci * 10;//std::pow(2, maxCruci);
 
                 //rewards[q] = reward + maxCruci * 1e1;//second row (14 crusiforms)
                 //rewards[q] = reward + maxCruci * 1e2;//third row (20 crusiforms)
-                rewards[q] = reward + Clamp(maxCruci - 14, 0, 551) * 1e5;//third row (20 crusiforms)
-                //rewards[q] = reward + Clamp(maxCruci - 20, 0, 551) * 1e5;//forth row (25 crusiforms)
+                //rewards[q] = reward + Clamp(maxCruci - 20, 0, 551) * 1e5;//third row (20 crusiforms by default)
+                //rewards[q] = reward + Clamp(maxCruci - 25, 0, 551) * 1e7;//forth row (25 crusiforms by default)
+
+                rewards[q] = reward + Clamp(maxCruci - REGULARIZATION_CRUCI_AMOUNT, 0, static_cast<int>(width * height)) * REGULARIZATION_CRUCI_ADD;
 #else
                 rewards[q] = reward;
 #endif
