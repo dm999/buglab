@@ -52,7 +52,7 @@ __published:	// IDE-managed Components
 
 private:
 
-    bool checkCalcIsInProgress() const;
+    bool checkCalcIsNotInProgress() const;
 
     void calcNonWalls() const;
     void processUniqueCruci(const MazeData& cell) const;

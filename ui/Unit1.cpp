@@ -20,14 +20,14 @@ TBUIForm *BUIForm;
 
 #include "BuglabRoutiness.h"
 
-const size_t WinHeight = 580;
-const size_t WinWidth = 950;
+const size_t PaddingTopRef = 33;
+const size_t PaddingLeftRef = 35;
 
-const size_t PaddingTop = 33;
-const size_t PaddingLeft = 35;
+size_t PaddingTop = PaddingTopRef;
+size_t PaddingLeft = PaddingLeftRef;
 
-size_t CellHeight = (WinHeight - PaddingTop * 2 - 40) / 19;
-size_t CellWidth = (WinWidth - PaddingLeft * 2 - 10) / 29;
+size_t CellHeight = 0;
+size_t CellWidth = 0;
 
 bool mouseDown = false;
 bool mouseRDown = false;
@@ -56,8 +56,8 @@ __fastcall TBUIForm::TBUIForm(TComponent* Owner)
     : TForm(Owner)
 {
     mBMP = new Graphics::TBitmap();
-    mBMP->Width = BUIForm->Width;
-    mBMP->Height = BUIForm->Height;
+    mBMP->Width = BUIForm->ClientWidth;
+    mBMP->Height = BUIForm->ClientHeight;
 
     initMaze(maze);
     mazeW = maze;
@@ -65,14 +65,35 @@ __fastcall TBUIForm::TBUIForm(TComponent* Owner)
     Lock = new TCriticalSection();
 
     calcIsInProgress = false;
+
+    CellHeight = (BUIForm->ClientHeight - PaddingTop * 2) / 19;
+    CellWidth = (BUIForm->ClientWidth - PaddingLeft * 2) / 29;
 }
 //---------------------------------------------------------------------------
 void __fastcall TBUIForm::ExitExecute(TObject *Sender)
 {
-    Close();
+
+    if(!checkCalcIsNotInProgress())
+    {
+         if(Thread)
+         {
+            Thread->Terminate();
+         }
+
+         doRecalc = true;
+    }
+    else
+    {
+         if(Thread)
+         {
+            Thread->Terminate();
+         }
+
+         Close();
+    }
 }
 //---------------------------------------------------------------------------
-bool TBUIForm::checkCalcIsInProgress() const
+bool TBUIForm::checkCalcIsNotInProgress() const
 {
     bool continueFoo = true;
     Lock->Acquire();
@@ -124,20 +145,6 @@ int TBUIForm::getFontSize() const
 //---------------------------------------------------------------------------
 void TBUIForm::Pnt()
 {
-    if(!checkCalcIsInProgress())
-    {
-        mBMP->Canvas->Brush->Color = clBtnFace;
-        mBMP->Canvas->Brush->Style = bsSolid;
-        mBMP->Canvas->Pen->Color = clBtnFace;
-        mBMP->Canvas->Rectangle(1, BUIForm->Height - 50, mBMP->Width - 1, mBMP->Height - 1);
-
-        if(secondsPassed > 0)
-            mBMP->Canvas->TextOutA(10, BUIForm->Height - 50, "Score: calculating... "  + IntToStr((long long)secondsPassed));
-        else
-            mBMP->Canvas->TextOutA(10, BUIForm->Height - 50, "Score: calculating...");
-        return;
-    }
-
     mBMP->Canvas->Brush->Color = clBtnFace;
     mBMP->Canvas->Brush->Style = bsSolid;
     //mBMP->Canvas->Pen->Color = clRed;
@@ -295,15 +302,31 @@ void TBUIForm::Pnt()
         }
     }
 
-    if(curFileName != "")
-        mBMP->Canvas->TextOutA(10, BUIForm->Height - 50, "Score: " + AnsiString(printRewardFriendly(score).c_str()) + " (" + curFileName + ")" + " [" + IntToStr(nonWallsCount) + "]" + " {" + IntToStr((int)uniqueCruci.size()) + "}");
-    else
-        mBMP->Canvas->TextOutA(10, BUIForm->Height - 50, "Score: " + AnsiString(printRewardFriendly(score).c_str()) + " [" + IntToStr(nonWallsCount) + "]" + " {" + IntToStr((int)uniqueCruci.size()) + "}");
-}
+    if(!checkCalcIsNotInProgress())
+    {
+        //mBMP->Canvas->Brush->Color = clBtnFace;
+        //mBMP->Canvas->Brush->Style = bsSolid;
+        //mBMP->Canvas->Pen->Color = clBtnFace;
+        //mBMP->Canvas->Rectangle(1, BUIForm->ClientHeight - getFontSize() * 2.5, mBMP->Width - 1, mBMP->Height - 1);
 
+        if(secondsPassed > 0)
+            mBMP->Canvas->TextOutA(10, BUIForm->ClientHeight - getFontSize() * 2.5, "Score: calculating... "  + IntToStr((long long)secondsPassed));
+        else
+            mBMP->Canvas->TextOutA(10, BUIForm->ClientHeight - getFontSize() * 2.5, "Score: calculating...");
+        //return;
+    }
+    else
+    {
+        if(curFileName != "")
+            mBMP->Canvas->TextOutA(10, BUIForm->ClientHeight - getFontSize() * 2.5, "Score: " + AnsiString(printRewardFriendly(score).c_str()) + " (" + curFileName + ")" + " [" + IntToStr(nonWallsCount) + "]" + " {" + IntToStr((int)uniqueCruci.size()) + "}");
+        else
+             mBMP->Canvas->TextOutA(10, BUIForm->ClientHeight - getFontSize() * 2.5, "Score: " + AnsiString(printRewardFriendly(score).c_str()) + " [" + IntToStr(nonWallsCount) + "]" + " {" + IntToStr((int)uniqueCruci.size()) + "}");
+    }
+}
+//---------------------------------------------------------------------------
 void TBUIForm::Blt()
 {
-     BUIForm->Canvas->CopyRect(TRect(0,0,BUIForm->Width,BUIForm->Height),mBMP->Canvas,TRect(0,0,BUIForm->Width,BUIForm->Height));
+     BUIForm->Canvas->CopyRect(TRect(0,0,BUIForm->ClientWidth,BUIForm->ClientHeight),mBMP->Canvas,TRect(0,0,BUIForm->ClientWidth,BUIForm->ClientHeight));
 }
 
 //---------------------------------------------------------------------------
@@ -316,7 +339,7 @@ void __fastcall TBUIForm::FormPaint(TObject *Sender)
 
 void __fastcall TBUIForm::RecalcExecute(TObject *Sender)
 {
-    if(!checkCalcIsInProgress()) return;
+    if(!checkCalcIsNotInProgress()) return;
 
     if(doRecalc)
     {
@@ -358,7 +381,7 @@ void __fastcall TBUIForm::RecalcExecute(TObject *Sender)
 //---------------------------------------------------------------------------
 void __fastcall TBUIForm::LoadExecute(TObject *Sender)
 {
-    if(!checkCalcIsInProgress()) return;
+    if(!checkCalcIsNotInProgress()) return;
 
     if(OpenDialog1->FileName != "")
     {
@@ -380,7 +403,7 @@ void __fastcall TBUIForm::LoadExecute(TObject *Sender)
 
 void __fastcall TBUIForm::OpenExecute(TObject *Sender)
 {
-    if(!checkCalcIsInProgress()) return;
+    if(!checkCalcIsNotInProgress()) return;
 
     if(OpenDialog1->Execute())
     {
@@ -410,7 +433,7 @@ void __fastcall TBUIForm::FormMouseDown(TObject *Sender, TMouseButton Button, TS
 {
     if(Button == mbLeft)
     {
-        if(!checkCalcIsInProgress()) return;
+        if(!checkCalcIsNotInProgress()) return;
 
         mouseDown = true;
 
@@ -436,7 +459,7 @@ void __fastcall TBUIForm::FormMouseDown(TObject *Sender, TMouseButton Button, TS
 
 void __fastcall TBUIForm::SaveExecute(TObject *Sender)
 {
-    if(!checkCalcIsInProgress()) return;
+    if(!checkCalcIsNotInProgress()) return;
 
     if(SaveDialog1->Execute())
     {
@@ -458,7 +481,7 @@ void __fastcall TBUIForm::FormMouseUp(TObject *Sender, TMouseButton Button, TShi
     if(Button == mbLeft && mouseDown && !mouseMoved)
     {
 
-        if(!checkCalcIsInProgress()) return;
+        if(!checkCalcIsNotInProgress()) return;
 
         if(X >= PaddingLeft && X <= PaddingLeft + CellWidth * 29 && Y >= PaddingTop && Y <= PaddingTop + CellHeight * 19)
         {
@@ -505,7 +528,7 @@ void __fastcall TBUIForm::FormMouseMove(TObject *Sender, TShiftState Shift, int 
     {
         if(X >= PaddingLeft && X <= PaddingLeft + CellWidth * 29 && Y >= PaddingTop && Y <= PaddingTop + CellHeight * 19)
         {
-            if(!checkCalcIsInProgress()) return;
+            if(!checkCalcIsNotInProgress()) return;
 
             int x = (X - PaddingLeft) / CellWidth;
             int y = (Y - PaddingTop) / CellHeight;
@@ -557,15 +580,15 @@ void __fastcall TBUIForm::HelpExecute(TObject *Sender)
         "Ctrl-S - save file\n"
         "Ctrl-L - reload opened file\n"
         "Ctrl-N - new\n"
-        "Ctrl-Z - Undo\n"
-        "Ctrl-Y - Redo\n"
+        "Ctrl-Z - undo\n"
+        "Ctrl-Y - redo\n"
         "Space - calculate score / clear\n"
-        "Escape - exit").c_bstr(), WideString("Help").c_bstr(), MB_ICONINFORMATION);
+        "Escape - stop calculation / exit").c_bstr(), WideString("Help").c_bstr(), MB_ICONINFORMATION);
 }
 //---------------------------------------------------------------------------
 void __fastcall TBUIForm::UndoExecute(TObject *Sender)
 {
-    if(!checkCalcIsInProgress()) return;
+    if(!checkCalcIsNotInProgress()) return;
 
     if(ctrlZ.empty()) return;
 
@@ -583,7 +606,7 @@ void __fastcall TBUIForm::UndoExecute(TObject *Sender)
 //---------------------------------------------------------------------------
 void __fastcall TBUIForm::RedoExecute(TObject *Sender)
 {
-    if(!checkCalcIsInProgress()) return;
+    if(!checkCalcIsNotInProgress()) return;
 
     if(ctrlY.empty()) return;
 
@@ -641,13 +664,11 @@ void __fastcall TBUIForm::FormMouseLeave(TObject *Sender)
 
 void __fastcall TBUIForm::FormResize(TObject *Sender)
 {
-    if(!checkCalcIsInProgress()) return;
+    mBMP->Width = BUIForm->ClientWidth;
+    mBMP->Height = BUIForm->ClientHeight;
 
-    mBMP->Width = BUIForm->Width;
-    mBMP->Height = BUIForm->Height;
-
-    CellHeight = (BUIForm->Height - PaddingTop * 2 - 40) / 19;
-    CellWidth = (BUIForm->Width - PaddingLeft * 2 - 10) / 29;
+    CellHeight = (BUIForm->ClientHeight - PaddingTop * 2 - 20) / 19;
+    CellWidth = (BUIForm->ClientWidth - PaddingLeft * 2) / 29;
 
     BUIForm->Pnt();
     BUIForm->Blt();

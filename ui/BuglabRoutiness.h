@@ -1,6 +1,7 @@
 #ifndef BUGLAB_ROUTINESS_H
 #define BUGLAB_ROUTINESS_H
 
+#include "CalcThread.h"
 
 const size_t width = 29;
 const size_t height = 19;
@@ -123,7 +124,7 @@ bool isExitExists(const Maze& maze)
 }
 
 
-bool runMaze(Maze& maze, Score& reward)
+bool runMaze(Maze& maze, Score& reward, TCalcThread * Thread)
 {
     reward = 0;
 
@@ -137,6 +138,8 @@ bool runMaze(Maze& maze, Score& reward)
 
     while(1)
     {
+        if(Thread->isTerminated()) return false;
+
         if((kx == width) && (ky == height))
         {
             reward = n;
@@ -214,53 +217,54 @@ Score score = 0;
 
 bool calcIsInProgress;
 
-//https://docwiki.embarcadero.com/CodeExamples/Sydney/en/SleepSort_(C%2B%2B)
-class TCalcThread : public TThread {
-private:
 
-    TCriticalSection *FLock;
-    TBUIForm * Form;
 
-    void __fastcall Execute()
-    {
-        const HRESULT iniResult = CoInitializeEx(0, COINIT_MULTITHREADED);
+void __fastcall TCalcThread::Execute()
+{
+    const HRESULT iniResult = CoInitializeEx(0, COINIT_MULTITHREADED);
 
-        if (!((iniResult == S_OK) || (iniResult == S_FALSE))) {
-            ShowMessage("!");
-            return;
-        }
-
-        try {
-            runMaze(mazeW, score);
-
-            FLock->Acquire();
-            calcIsInProgress = false;
-            FLock->Release();
-        }
-        catch (Exception &ex) {
-            ShowMessage("!");
-        }
-        CoUninitialize();
-
-        Synchronize(repaint);
-        //Form->Repaint();
+    if (!((iniResult == S_OK) || (iniResult == S_FALSE))) {
+        ShowMessage("!");
+        return;
     }
 
-    void __fastcall repaint()
-    {
-        Form->Pnt();
-        Form->Blt();
+    try {
+        Maze mazeWLocal = maze;
+        Score scoreLocal = 0;
+        bool finished = runMaze(mazeWLocal, scoreLocal, this);
 
-        Form->Timer1->Enabled = false;
+        FLock->Acquire();
+        calcIsInProgress = false;
+        if(finished)
+        {
+            score = scoreLocal;
+            mazeW = mazeWLocal;
+        }
+        FLock->Release();
     }
+    catch (Exception &ex) {
+        ShowMessage("!");
+    }
+    CoUninitialize();
 
-public:
-    TCalcThread(bool CreateSuspended, TCriticalSection *ALock, TBUIForm * f) : TThread(CreateSuspended)
-    {
-        FLock = ALock;
-        Form = f;
-    }
-};
+    Synchronize(repaint);
+    //Form->Repaint();
+}
+
+void __fastcall TCalcThread::repaint()
+{
+    Form->FormResize(NULL);
+    //Form->Pnt();
+    //Form->Blt();
+
+    Form->Timer1->Enabled = false;
+}
+
+TCalcThread::TCalcThread(bool CreateSuspended, TCriticalSection *ALock, TBUIForm * f) : TThread(CreateSuspended)
+{
+    FLock = ALock;
+    Form = f;
+}
 
 
 #endif
