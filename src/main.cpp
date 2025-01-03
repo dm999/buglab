@@ -24,17 +24,20 @@
 //#define REGULARIZATION_CRUCI_AMOUNT 20 //third row (20 crusiforms by default)
 //#define REGULARIZATION_CRUCI_ADD 1e5
 //#define REGULARIZATION_CRUCI_AMOUNT 25 //forth row (25 crusiforms by default)
+//#define REGULARIZATION_CRUCI_AMOUNT 26 //forth row
 //#define REGULARIZATION_CRUCI_ADD 1e7
+//#define REGULARIZATION_CRUCI_AMOUNT 32 //fift row (32 crusiforms by default)
+//#define REGULARIZATION_CRUCI_ADD 1e8
 
 //genetics
 #if !defined(MASKED_BRUTUAL)
-const size_t reshape = 1;
+//const size_t reshape = 1;
 //const size_t reshape = 5;
-//const size_t reshape = 20;
+const size_t reshape = 20;
 const size_t populationSize = 1000 / reshape;
 #else
 const size_t reshape = 1;
-const size_t populationSize = 100000;
+const size_t populationSize = 50;
 #endif
 const size_t elite = 2;
 const size_t populationSizeAndElite = populationSize + elite;
@@ -42,8 +45,8 @@ const float crossoverRate = 1.0f;
 float mutationRate = 0.002f;
 typedef std::pair<float, float> MutationFactorRange;
 //MutationFactorRange mutationRange = {0.001f, 0.004f};
-MutationFactorRange mutationRange = {0.001f, 0.01f};
-//MutationFactorRange mutationRange = {0.004f, 0.01f};
+//MutationFactorRange mutationRange = {0.001f, 0.01f};
+MutationFactorRange mutationRange = {0.004f, 0.01f};
 //MutationFactorRange mutationRange = {0.008f, 0.02f};
 //const size_t mutationRatePeriod = 2000 * reshape;
 const size_t mutationRatePeriod = 2000;
@@ -455,7 +458,7 @@ void maskedBrutualForce(Population& pop)
 #if defined(STAT)
         Population pop2(pop);
         std::sort(pop2.begin(), pop2.end(), [](const PopElement& elemA, const PopElement& elemB){ return elemA.fitness < elemB.fitness; });
-        printf("reward: %11s  iter best: %11s  middle: %11s  %zu: %11s  mr: %.4f ", printRewardFriendly(totalBestReward).c_str(), printRewardFriendly(bestReward).c_str(), printRewardFriendly(pop2[populationSize / 2].fitness).c_str(), 100 / reshape, printRewardFriendly(pop2[100 / reshape].fitness).c_str(), mutationRate);
+        printf("reward: %11s  iter best: %11s  middle: %11s ", printRewardFriendly(totalBestReward).c_str(), printRewardFriendly(bestReward).c_str(), printRewardFriendly(pop2[populationSize / 2].fitness).c_str());
 #else
         //printf("total best reward: %zu best reward: %zu ", totalBestReward, bestReward);
         printf("reward: %11s iter best: %11s ", printRewardFriendly(totalBestReward).c_str(), printRewardFriendly(bestReward).c_str());
