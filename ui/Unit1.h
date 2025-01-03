@@ -12,6 +12,7 @@
 #include <PlatformDefaultStyleActnCtrls.hpp>
 #include <Dialogs.hpp>
 #include <ExtCtrls.hpp>
+#include <Menus.hpp>
 
 typedef unsigned long long MazeData;
 //---------------------------------------------------------------------------
@@ -31,6 +32,21 @@ __published:	// IDE-managed Components
     TAction *Redo;
     TTimer *Timer1;
     TAction *New;
+    TMainMenu *MainMenu1;
+    TMenuItem *File;
+    TMenuItem *New1;
+    TMenuItem *Open1;
+    TMenuItem *Save1;
+    TMenuItem *Load1;
+    TMenuItem *N1;
+    TMenuItem *Exit1;
+    TMenuItem *Edit1;
+    TMenuItem *Calculate1;
+    TMenuItem *Undo1;
+    TMenuItem *Redo1;
+    TMenuItem *Help1;
+    TMenuItem *Hotkeys1;
+    TMenuItem *Cross1;
     void __fastcall ExitExecute(TObject *Sender);
     void __fastcall FormPaint(TObject *Sender);
     void __fastcall RecalcExecute(TObject *Sender);
@@ -49,6 +65,7 @@ __published:	// IDE-managed Components
     void __fastcall NewExecute(TObject *Sender);
     void __fastcall FormMouseLeave(TObject *Sender);
     void __fastcall FormResize(TObject *Sender);
+    void __fastcall Cross1Click(TObject *Sender);
 
 private:
 

@@ -49,8 +49,13 @@ long long secondsPassed = 0;
 int oldX = 0;
 int oldY = 0;
 
+int currCellX = -1;
+int currCellY = -1;
+
 int nonWallsCount = 551;
 std::vector<MazeData> uniqueCruci;
+
+bool isCross = false;
 //---------------------------------------------------------------------------
 __fastcall TBUIForm::TBUIForm(TComponent* Owner)
     : TForm(Owner)
@@ -253,52 +258,112 @@ void TBUIForm::Pnt()
     mBMP->Canvas->Pen->Color = clRed;
     mBMP->Canvas->Font->Color = clRed;
     //mBMP->Canvas->Brush->Style = bsClear;
+    mBMP->Canvas->Pen->Style = psDot;
 
-    for(int q = 0; q <= 19; ++q)
+    if(isCross)
     {
-        if(q == 0 || q == 19)
+         mBMP->Canvas->Pen->Style = psDot;
+
+        //cross horiz
+        if(currCellY != -1)
+        {
+            mBMP->Canvas->MoveTo(PaddingLeft, PaddingTop + CellHeight * currCellY);
+            mBMP->Canvas->LineTo(PaddingLeft + CellWidth * width, PaddingTop + CellHeight * currCellY);
+
+            if(currCellY < height)
+            {
+                mBMP->Canvas->MoveTo(PaddingLeft, PaddingTop + CellHeight * (currCellY + 1));
+                mBMP->Canvas->LineTo(PaddingLeft + CellWidth * width, PaddingTop + CellHeight * (currCellY + 1));
+            }
+
+            mBMP->Canvas->Pen->Style = psSolid;
+
+            mBMP->Canvas->MoveTo(PaddingLeft + CellWidth * currCellX, PaddingTop + CellHeight * currCellY);
+            mBMP->Canvas->LineTo(PaddingLeft + CellWidth * (currCellX + 1), PaddingTop + CellHeight * currCellY);
+
+            if(currCellY < height)
+            {
+                mBMP->Canvas->MoveTo(PaddingLeft + CellWidth * currCellX, PaddingTop + CellHeight * (currCellY + 1));
+                mBMP->Canvas->LineTo(PaddingLeft + CellWidth * (currCellX + 1), PaddingTop + CellHeight * (currCellY + 1));
+            }
+        }
+
+
+        mBMP->Canvas->Pen->Style = psDot;
+
+        //cross vert
+        if(currCellX != -1)
+        {
+            mBMP->Canvas->MoveTo(PaddingLeft + CellWidth * currCellX, PaddingTop);
+            mBMP->Canvas->LineTo(PaddingLeft + CellWidth * currCellX, PaddingTop + CellHeight * height);
+
+            if(currCellX < width)
+            {
+                mBMP->Canvas->MoveTo(PaddingLeft + CellWidth * (currCellX + 1), PaddingTop);
+                mBMP->Canvas->LineTo(PaddingLeft + CellWidth * (currCellX + 1), PaddingTop + CellHeight * height);
+            }
+
+            mBMP->Canvas->Pen->Style = psSolid;
+
+            mBMP->Canvas->MoveTo(PaddingLeft + CellWidth * currCellX, PaddingTop + CellHeight * currCellY);
+            mBMP->Canvas->LineTo(PaddingLeft + CellWidth * currCellX, PaddingTop + CellHeight * (currCellY + 1));
+
+            if(currCellX < width)
+            {
+                mBMP->Canvas->MoveTo(PaddingLeft + CellWidth * (currCellX + 1), PaddingTop + CellHeight * currCellY);
+                mBMP->Canvas->LineTo(PaddingLeft + CellWidth * (currCellX + 1), PaddingTop + CellHeight * (currCellY + 1));
+            }
+        }
+    }
+
+    mBMP->Canvas->Pen->Style = psSolid;
+
+    //grids
+    for(int q = 0; q <= height; ++q)
+    {
+        if(q == 0 || q == height)
         {
             mBMP->Canvas->MoveTo(PaddingLeft, PaddingTop + CellHeight * q);
-            mBMP->Canvas->LineTo(PaddingLeft + CellWidth * 29, PaddingTop + CellHeight * q);
+            mBMP->Canvas->LineTo(PaddingLeft + CellWidth * width, PaddingTop + CellHeight * q);
         }
         else
         {
             mBMP->Canvas->MoveTo(PaddingLeft - 2, PaddingTop + CellHeight * q);
             mBMP->Canvas->LineTo(PaddingLeft + 3, PaddingTop + CellHeight * q);
 
-            mBMP->Canvas->MoveTo(PaddingLeft + CellWidth * 29 - 2, PaddingTop + CellHeight * q);
-            mBMP->Canvas->LineTo(PaddingLeft + CellWidth * 29 + 3, PaddingTop + CellHeight * q);
+            mBMP->Canvas->MoveTo(PaddingLeft + CellWidth * width - 2, PaddingTop + CellHeight * q);
+            mBMP->Canvas->LineTo(PaddingLeft + CellWidth * width + 3, PaddingTop + CellHeight * q);
         }
 
-        if(q < 19)
+        if(q < height)
         {
              int tHeight = mBMP->Canvas->TextHeight(IntToStr(q + 1));
              mBMP->Canvas->TextOutA(PaddingLeft - 20, PaddingTop + CellHeight * q + CellHeight / 2 - tHeight / 2, IntToStr(q + 1));
-             mBMP->Canvas->TextOutA(PaddingLeft + CellWidth * 29 + 10, PaddingTop + CellHeight * q + CellHeight / 2 - tHeight / 2, IntToStr(19 - q));
+             mBMP->Canvas->TextOutA(PaddingLeft + CellWidth * width + 10, PaddingTop + CellHeight * q + CellHeight / 2 - tHeight / 2, IntToStr((int)height - q));
         }
     }
 
-    for(int q = 0; q <= 29; ++q)
+    for(int q = 0; q <= width; ++q)
     {
-        if(q == 0 || q == 29)
+        if(q == 0 || q == width)
         {
             mBMP->Canvas->MoveTo(PaddingLeft + CellWidth * q, PaddingTop);
-            mBMP->Canvas->LineTo(PaddingLeft + CellWidth * q, PaddingTop + CellHeight * 19);
+            mBMP->Canvas->LineTo(PaddingLeft + CellWidth * q, PaddingTop + CellHeight * height);
         }
         else
         {
             mBMP->Canvas->MoveTo(PaddingLeft + CellWidth * q, PaddingTop - 2);
             mBMP->Canvas->LineTo(PaddingLeft + CellWidth * q, PaddingTop + 3);
 
-            mBMP->Canvas->MoveTo(PaddingLeft + CellWidth * q, PaddingTop + CellHeight * 19 - 2);
-            mBMP->Canvas->LineTo(PaddingLeft + CellWidth * q, PaddingTop + CellHeight * 19 + 3);
+            mBMP->Canvas->MoveTo(PaddingLeft + CellWidth * q, PaddingTop + CellHeight * height - 2);
+            mBMP->Canvas->LineTo(PaddingLeft + CellWidth * q, PaddingTop + CellHeight * height + 3);
         }
 
-        if(q < 29)
+        if(q < width)
         {
              int tWidth = mBMP->Canvas->TextWidth(IntToStr(q + 1));
              mBMP->Canvas->TextOutA(PaddingLeft + CellWidth * q + CellWidth / 2 - tWidth / 2, PaddingTop - 20, IntToStr(q + 1));
-             mBMP->Canvas->TextOutA(PaddingLeft + CellWidth * q + CellWidth / 2 - tWidth / 2, PaddingTop + CellHeight * 19 + 10, IntToStr(29 - q));
+             mBMP->Canvas->TextOutA(PaddingLeft + CellWidth * q + CellWidth / 2 - tWidth / 2, PaddingTop + CellHeight * height + 10, IntToStr((int)width - q));
         }
     }
 
@@ -445,6 +510,7 @@ void __fastcall TBUIForm::FormMouseDown(TObject *Sender, TMouseButton Button, TS
         }
     }
 
+#if 0
     if(Button == mbRight)
     {
         mouseRDown = true;
@@ -454,6 +520,7 @@ void __fastcall TBUIForm::FormMouseDown(TObject *Sender, TMouseButton Button, TS
 
         BUIForm->Cursor = crSizeAll;
     }
+#endif
 }
 //---------------------------------------------------------------------------
 
@@ -463,6 +530,11 @@ void __fastcall TBUIForm::SaveExecute(TObject *Sender)
 
     if(SaveDialog1->Execute())
     {
+        AnsiString fileExt = ExtractFileExt(SaveDialog1->FileName);
+        if(fileExt == "")
+        {
+            SaveDialog1->FileName = SaveDialog1->FileName + ".txt";
+        }
         curFileName = ExtractFileName(SaveDialog1->FileName);
         BUIForm->Caption = "BUI: " + curFileName;
 
@@ -524,9 +596,18 @@ void __fastcall TBUIForm::FormMouseMove(TObject *Sender, TShiftState Shift, int 
     static int x_recent = 0;
     static int y_recent = 0;
 
+    currCellX = -1;
+    currCellY = -1;
+
+    if(X >= PaddingLeft && X <= PaddingLeft + CellWidth * width && Y >= PaddingTop && Y <= PaddingTop + CellHeight * height)
+    {
+        currCellX = (X - PaddingLeft) / CellWidth;
+        currCellY = (Y - PaddingTop) / CellHeight;
+    }
+
     if(mouseDown)
     {
-        if(X >= PaddingLeft && X <= PaddingLeft + CellWidth * 29 && Y >= PaddingTop && Y <= PaddingTop + CellHeight * 19)
+        if(X >= PaddingLeft && X <= PaddingLeft + CellWidth * width && Y >= PaddingTop && Y <= PaddingTop + CellHeight * height)
         {
             if(!checkCalcIsNotInProgress()) return;
 
@@ -558,17 +639,20 @@ void __fastcall TBUIForm::FormMouseMove(TObject *Sender, TShiftState Shift, int 
                 calcNonWalls();
 
                 score = 0;
-                Pnt();
-                Blt();
             }
         }
     }
 
+#if 0
     if(mouseRDown)
     {
         BUIForm->Left += X - oldX;
         BUIForm->Top += Y - oldY;
     }
+#endif
+
+    Pnt();
+    Blt();
 }
 //---------------------------------------------------------------------------
 
@@ -672,6 +756,15 @@ void __fastcall TBUIForm::FormResize(TObject *Sender)
 
     BUIForm->Pnt();
     BUIForm->Blt();
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TBUIForm::Cross1Click(TObject *Sender)
+{
+    isCross = !isCross;
+
+    Pnt();
+    Blt();
 }
 //---------------------------------------------------------------------------
 
